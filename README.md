@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Coding Hub
 
 Coding Hub is a Vite/React frontend with a small Express API. The current authentication and dashboard data are local demo data, so the app can run without a database or external credentials.
@@ -27,3 +28,6 @@ On macOS, Linux, or Windows Command Prompt, use `npm` instead of `npm.cmd`.
 npm.cmd run lint
 npm.cmd run build
 ```
+=======
+# coding-HUB
+>>>>>>> 171989709103bd3d69bce117b327ff4384f8918b
