@@ -1,0 +1,12 @@
+{
+  "name": "coding-hub",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "start:api": "npm --prefix backend start",
+    "start:web": "npm --prefix frontend run dev"
+  }
+}
