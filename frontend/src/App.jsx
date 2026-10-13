@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Platforms from "./pages/Platforms";
+import Contests from "./pages/Contests";
 import AppLayout from "./components/organisms/AppLayout";
 import { useAuth } from "./context/useAuth";
 
@@ -57,6 +58,7 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/platforms" element={<Platforms />} />
+      <Route path="/contests" element={<Contests />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route
@@ -65,16 +67,6 @@ const App = () => {
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/contests"
-        element={
-          <ComingSoonPage
-            title="Contest Tracker"
-            description="Upcoming live contests from Codeforces, LeetCode, CodeChef, and AtCoder with automated countdowns and calendar reminders."
-            icon="🏆"
-          />
         }
       />
       <Route

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-cream: #fff0be;
   --color-yellow: #ffd05a;
@@ -30,11 +32,9 @@ html {
 body {
   margin: 0;
 
-  background:
-    #fffbf5;
+  background: #fffbf5;
 
-  color:
-    #171717;
+  color: #171717;
 
   font-family:
     Inter,
@@ -43,6 +43,185 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+}
+
+body {
+  background-color: #f6f7fb;
+  background-image:
+    radial-gradient(ellipse at 8% 0%, rgb(255 208 90 / 13%), transparent 32rem),
+    radial-gradient(ellipse at 96% 12%, rgb(99 102 241 / 8%), transparent 30rem);
+  background-attachment: fixed;
+  font-feature-settings: "ss01" on, "cv11" on;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  color: #171717;
+  background: #ffe08a;
+}
+
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a {
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgb(99 102 241 / 38%);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.app-sidebar {
+  border-color: rgb(226 229 238 / 85%) !important;
+  background: rgb(250 251 255 / 82%) !important;
+  backdrop-filter: blur(18px);
+}
+
+.app-topbar {
+  border-color: rgb(226 229 238 / 78%) !important;
+  background: rgb(250 251 255 / 78%) !important;
+  backdrop-filter: blur(20px);
+}
+
+article[class*="rounded-3xl"][class*="bg-white"],
+div[class*="rounded-3xl"][class*="bg-white"] {
+  border-color: rgb(226 229 238 / 92%);
+  box-shadow: 0 8px 28px rgb(33 42 70 / 5%);
+}
+
+article[class*="rounded-3xl"][class*="bg-white"]:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 38px rgb(33 42 70 / 9%);
+}
+
+button[class*="bg-[#FFD05A]"], a[class*="bg-[#FFD05A]"] {
+  border: 1px solid rgb(234 179 8 / 30%);
+  background-image: linear-gradient(135deg, #ffe38c, #ffd05a) !important;
+  box-shadow: 0 5px 14px rgb(217 153 19 / 14%);
+}
+
+button[class*="bg-[#171717]"], a[class*="bg-[#171717]"] {
+  background-image: linear-gradient(135deg, #292b3e, #171827) !important;
+  box-shadow: 0 8px 18px rgb(26 28 48 / 18%);
+}
+
+button[class*="bg-[#171717]"]:hover, a[class*="bg-[#171717]"]:hover { transform: translateY(-1px); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 99px; background: #cbd0df; background-clip: padding-box; }
+html.dark ::-webkit-scrollbar-thumb { background-color: #48546a; background-clip: padding-box; }
+
+input, select, textarea {
+  border-color: #e2e5ee;
+  border-radius: 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #818cf8 !important;
+  box-shadow: 0 0 0 4px rgb(99 102 241 / 10%);
+}
+
+.hero-visual {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 75%);
+  background:
+    radial-gradient(circle at 75% 25%, rgb(255 255 255 / 80%), transparent 26%),
+    linear-gradient(135deg, #fff1c6 0%, #f9d9d5 52%, #e8e9ff 100%) !important;
+  box-shadow: 0 28px 70px rgb(94 83 125 / 13%);
+}
+
+.hero-visual::before, .hero-visual::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  border: 1px solid rgb(255 255 255 / 65%);
+  border-radius: 50%;
+}
+
+.hero-visual::before { width: 340px; height: 340px; right: -85px; top: -115px; }
+.hero-visual::after { width: 250px; height: 250px; left: -85px; bottom: -120px; }
+
+.auth-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 15% 15%, rgb(255 208 90 / 25%), transparent 30rem),
+    radial-gradient(ellipse at 90% 85%, rgb(129 140 248 / 18%), transparent 34rem),
+    #f6f7fb !important;
+}
+
+.auth-card {
+  border-color: rgb(226 229 238 / 90%) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 24px 80px rgb(35 43 74 / 12%) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+html.dark body {
+  background: #111827;
+  color: #f8fafc;
+  background-image: radial-gradient(ellipse at 10% 0%, rgb(99 102 241 / 12%), transparent 32rem);
+}
+
+html.dark .app-sidebar, html.dark .app-topbar { background: rgb(17 24 39 / 84%) !important; border-color: #293447 !important; }
+html.dark article[class*="rounded-3xl"][class*="bg-white"], html.dark div[class*="rounded-3xl"][class*="bg-white"] { box-shadow: 0 8px 28px rgb(0 0 0 / 18%); }
+html.dark .auth-shell { background: radial-gradient(ellipse at 10% 0%, rgb(99 102 241 / 16%), transparent 32rem), #111827 !important; }
+html.dark .hero-visual { background: linear-gradient(135deg, #473b2c 0%, #433442 52%, #292d4a 100%) !important; }
+
+html.dark [class*="bg-[#FFFBF5]"],
+html.dark [class*="bg-[#FFFDF9]"] {
+  background-color: #111827 !important;
+}
+
+html.dark [class~="bg-white"] {
+  background-color: #202936 !important;
+}
+
+html.dark [class*="border-[#E9E2D8]"],
+html.dark [class*="border-[#F2ECE4]"] {
+  border-color: #3b4654 !important;
+}
+
+html.dark [class*="text-[#171717]"],
+html.dark [class*="text-[#4A4A4A]"],
+html.dark [class*="text-[#5F5F5F]"],
+html.dark [class*="text-[#7A7A7A]"],
+html.dark [class*="text-[#8E8E8E]"],
+html.dark [class*="text-[#9A9A9A]"] {
+  color: #cbd5e1 !important;
+}
+
+html.dark [class*="hover:bg-[#FFF0DA]"]:hover,
+html.dark [class*="hover:bg-[#FFF4E5]"]:hover,
+html.dark [class*="bg-gray-50"] {
+  background-color: #2a3645 !important;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  color: #f8fafc;
+  background-color: #202936;
+  border-color: #3b4654;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94a3b8;
 }
 
 button {

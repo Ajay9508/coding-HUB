@@ -1,23 +1,34 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "CodingHub Backend API",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-      "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "tsx watch src/server.ts",
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "npm run build && node --test",
+    "migrate:json": "tsx scripts/migrate-json-to-mongo.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
-    "axios": "^1.20.0",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.11.1",
+    "morgan": "^1.12.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.6.5",
+    "mongodb-memory-server": "^10.2.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

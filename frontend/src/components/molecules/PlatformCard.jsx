@@ -1,4 +1,4 @@
-import { Star, Trophy, Award, User, Settings2, Link2, ArrowRight } from "lucide-react";
+import { Settings2, Link2, ArrowRight, RefreshCw } from "lucide-react";
 
 // Platform Vector Logos
 export const PlatformLogo = ({ type }) => {
@@ -55,21 +55,7 @@ const tagStyles = {
   orange: "bg-[#FFF2E5] text-[#EA580C]",
 };
 
-const getStatIcon = (type) => {
-  switch (type) {
-    case "trophy":
-      return <Trophy size={14} className="text-[#9A9A9A]" />;
-    case "award":
-      return <Award size={14} className="text-[#9A9A9A]" />;
-    case "user":
-      return <User size={14} className="text-[#9A9A9A]" />;
-    case "star":
-    default:
-      return <Star size={14} className="text-[#9A9A9A]" />;
-  }
-};
-
-const PlatformCard = ({ platform, onConnect, onManage }) => {
+const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
   return (
     <article className="flex flex-col justify-between rounded-3xl border border-[#E9E2D8] bg-white p-6 shadow-xs hover:shadow-md transition-all">
       {/* Top Header */}
@@ -101,13 +87,6 @@ const PlatformCard = ({ platform, onConnect, onManage }) => {
           </div>
         </div>
 
-        {/* Rating and Reviews */}
-        <div className="mt-4 flex items-center gap-1.5 text-xs">
-          <Star size={14} className="fill-[#F59E0B] text-[#F59E0B]" />
-          <span className="font-bold text-[#171717]">{platform.ratingScore}</span>
-          <span className="text-[#8E8E8E]">({platform.reviewsCount})</span>
-        </div>
-
         {/* Description */}
         <p className="mt-3 text-xs leading-relaxed text-[#5F5F5F] line-clamp-2">
           {platform.description}
@@ -130,17 +109,10 @@ const PlatformCard = ({ platform, onConnect, onManage }) => {
 
       {/* Bottom Section */}
       <div className="mt-6 border-t border-[#F2ECE4] pt-5">
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-2 pb-5 text-center sm:text-left">
-          {platform.stats.map((stat) => (
-            <div key={stat.label}>
-              <div className="flex items-center justify-center sm:justify-start gap-1 text-[11px] text-[#7A7A7A]">
-                {getStatIcon(stat.iconType)}
-                <span className="truncate">{stat.label}</span>
-              </div>
-              <p className="mt-1 text-sm font-bold text-[#171717]">{stat.value}</p>
-            </div>
-          ))}
+        <div className="pb-5 text-xs text-[#7A7A7A]">
+          {platform.isConnected
+            ? <><p>Connected account: <span className="font-semibold text-[#171717]">@{platform.handle}</span></p><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#FFFBF5] p-3"><span className="block text-[10px]">Solved</span><strong className="mt-1 block text-base text-[#171717]">{platform.solved ?? "—"}</strong></div><div className="rounded-xl bg-[#FFFBF5] p-3"><span className="block text-[10px]">Rating</span><strong className="mt-1 block text-base text-[#171717]">{platform.rating ?? "—"}</strong></div></div><p className={`mt-2 ${platform.syncStatus === "error" ? "text-[#B42318]" : "text-[#7A7A7A]"}`}>{platform.syncError || (platform.lastSyncedAt ? `Last synced ${new Date(platform.lastSyncedAt).toLocaleString()}` : platform.syncStatus === "unavailable" ? "Automatic stats sync is unavailable" : "Stats have not synced yet")}</p></>
+            : "Connect your handle to link this platform to your account."}
         </div>
 
         {/* Action Footer */}
@@ -155,6 +127,8 @@ const PlatformCard = ({ platform, onConnect, onManage }) => {
           </button>
 
           {platform.isConnected ? (
+            <>
+            <button type="button" onClick={() => onSync?.(platform.id)} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-xl border border-[#E9E2D8] bg-white px-3 py-2 text-xs font-bold text-[#171717] hover:bg-[#FFF8EE] disabled:opacity-60" aria-label={`Sync ${platform.name} stats`}><RefreshCw className={syncing ? "animate-spin" : ""} size={14} />Sync</button>
             <button
               type="button"
               onClick={() => onManage && onManage(platform)}
@@ -163,6 +137,7 @@ const PlatformCard = ({ platform, onConnect, onManage }) => {
               <Settings2 size={14} />
               Manage
             </button>
+            </>
           ) : (
             <button
               type="button"

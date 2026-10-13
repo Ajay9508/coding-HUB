@@ -8,6 +8,8 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
   );
   const [handle, setHandle] = useState(initialPlatform?.handle || "");
   const [statusMessage, setStatusMessage] = useState("");
+  const [statusError, setStatusError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const currentPlatform =
     platforms.find((p) => p.id === selectedPlatformId) || initialPlatform;
@@ -18,40 +20,43 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
     const selected = platforms.find((p) => p.id === newId);
     setHandle(selected?.handle || "");
     setStatusMessage("");
+    setStatusError(false);
   };
 
-  const handleConnect = (e) => {
+  const handleConnect = async (e) => {
     e.preventDefault();
     if (!handle.trim()) {
       setStatusMessage("Please enter your platform handle / username.");
       return;
     }
 
-    onSave({
-      id: currentPlatform.id,
-      isConnected: true,
-      handle: handle.trim(),
-    });
-
-    setStatusMessage("Platform connected successfully! 🎉");
-    setTimeout(() => {
-      setStatusMessage("");
-      onClose();
-    }, 600);
+    setSaving(true);
+    try {
+      await onSave({ id: currentPlatform.id, isConnected: true, handle: handle.trim() });
+      setStatusMessage("Platform connected to your account.");
+      setStatusError(false);
+      setTimeout(onClose, 400);
+    } catch (error) {
+      setStatusMessage(error.message || error.response?.data?.message || "Could not connect this platform.");
+      setStatusError(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDisconnect = () => {
-    onSave({
-      id: currentPlatform.id,
-      isConnected: false,
-      handle: "",
-    });
-
-    setStatusMessage("Platform disconnected.");
-    setTimeout(() => {
-      setStatusMessage("");
-      onClose();
-    }, 600);
+  const handleDisconnect = async () => {
+    setSaving(true);
+    try {
+      await onSave({ id: currentPlatform.id, isConnected: false, handle: "" });
+      setStatusMessage("Platform disconnected.");
+      setStatusError(false);
+      setTimeout(onClose, 400);
+    } catch (error) {
+      setStatusMessage(error.response?.data?.message || "Could not disconnect this platform.");
+      setStatusError(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -75,7 +80,7 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
                 {currentPlatform?.isConnected ? "Manage Connection" : "Connect Platform"}
               </h3>
               <p className="text-xs text-[#7A7A7A]">
-                Sync your stats, ratings and problem counts
+                Link a public profile handle to your account
               </p>
             </div>
           </div>
@@ -122,8 +127,8 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
           </div>
 
           {statusMessage && (
-            <div className="rounded-xl bg-[#E8F8EE] p-3 text-xs font-semibold text-[#16A34A] flex items-center gap-2">
-              <Check size={16} />
+          <div role={statusError ? "alert" : "status"} className={`rounded-xl p-3 text-xs font-semibold flex items-center gap-2 ${statusError ? "bg-[#FFE2DE] text-[#B42318]" : "bg-[#E8F8EE] text-[#16A34A]"}`}>
+              {!statusError && <Check size={16} />}
               {statusMessage}
             </div>
           )}
@@ -133,6 +138,7 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
               <button
                 type="button"
                 onClick={handleDisconnect}
+                disabled={saving}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-[#FFE2DE] bg-[#FFF5F5] px-4 py-2.5 text-xs font-bold text-[#F35F67] hover:bg-[#FFE2DE] transition"
               >
                 <Unlink size={14} />
@@ -142,10 +148,11 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
 
             <button
               type="submit"
+              disabled={saving}
               className="inline-flex items-center gap-2 rounded-xl bg-[#171717] px-5 py-2.5 text-xs font-bold text-white hover:bg-black transition shadow-xs"
             >
               <Link2 size={14} />
-              {currentPlatform?.isConnected ? "Update Handle" : "Connect Account"}
+              {saving ? "Saving…" : currentPlatform?.isConnected ? "Update Handle" : "Connect Account"}
             </button>
           </div>
         </form>

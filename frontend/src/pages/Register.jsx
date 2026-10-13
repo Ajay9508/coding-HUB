@@ -71,13 +71,14 @@ const Register = () => {
       flex min-h-screen
       items-center
       justify-center
+      auth-shell
       bg-[#FFFBF5]
       px-6
     ">
       <form
         onSubmit={handleSubmit}
         className="
-          w-full max-w-md
+          auth-card w-full max-w-md
           rounded-3xl
           border border-[#E9E2D8]
           bg-white
@@ -142,7 +143,7 @@ const Register = () => {
           type="password"
           placeholder="Password"
           value={password}
-          minLength={6}
+          minLength={8}
           required
           onChange={(e) =>
             setPassword(e.target.value)

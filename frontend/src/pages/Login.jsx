@@ -65,13 +65,14 @@ const Login = () => {
       flex min-h-screen
       items-center
       justify-center
+      auth-shell
       bg-[#FFFBF5]
       px-6
     ">
       <form
         onSubmit={handleSubmit}
         className="
-          w-full max-w-md
+          auth-card w-full max-w-md
           rounded-3xl
           border border-[#E9E2D8]
           bg-white

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Bell, ChevronDown, Menu, User, LogOut, Settings } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
+import ThemeToggle from "../atoms/Theme";
 
 const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
   const { user, logout } = useAuth();
@@ -25,16 +26,16 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const displayName = user?.name || "Amit Sharma";
+  const displayName = user?.name || "Ajay Kumar";
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
-    .toUpperCase() || "AS";
+    .toUpperCase() || "AK";
 
   return (
-    <header className="sticky top-0 z-40 flex h-20 items-center justify-between gap-4 border-b border-[#E9E2D8] bg-[#FFFBF5]/95 px-6 backdrop-blur-md">
+    <header className="app-topbar sticky top-0 z-40 flex h-20 items-center justify-between gap-4 border-b border-[#E9E2D8] bg-[#FFFBF5]/95 px-6 backdrop-blur-md">
       {/* Left: Mobile hamburger & Search bar */}
       <div className="flex flex-1 items-center gap-3 max-w-2xl">
         <button
@@ -55,7 +56,7 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
             type="text"
             value={searchValue}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-            placeholder="Search platforms, profiles, contests, or documentation..."
+            placeholder="Search contests, platforms, or keywords..."
             className="h-11 w-full rounded-2xl border border-[#E9E2D8] bg-white pl-11 pr-4 text-sm text-[#171717] placeholder:text-[#9A9A9A] focus:border-[#FF8E3C] focus:outline-none focus:ring-2 focus:ring-[#FF8E3C]/20 transition-all shadow-xs"
           />
         </div>
@@ -63,6 +64,7 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
 
       {/* Right: Notifications & Profile */}
       <div className="flex items-center gap-3 sm:gap-4">
+        <ThemeToggle />
         {/* Notification Bell */}
         <div className="relative" ref={notifRef}>
           <button

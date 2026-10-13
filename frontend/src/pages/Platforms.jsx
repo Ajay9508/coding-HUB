@@ -1,10 +1,12 @@
-import { useState, useMemo } from "react";
-import { LayoutGrid, List, SlidersHorizontal } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { LayoutGrid, List, RefreshCw, SlidersHorizontal } from "lucide-react";
 import AppLayout from "../components/organisms/AppLayout";
 import PlatformCard, { PlatformLogo } from "../components/molecules/PlatformCard";
 import WhyConnectCard from "../components/molecules/WhyConnectCard";
 import ConnectModal from "../components/molecules/ConnectModal";
 import platformsData from "../data/platforms";
+import api from "../api";
+import { useAuth } from "../context/useAuth";
 
 const categoryFilters = [
   { id: "all", label: "All Platforms" },
@@ -14,12 +16,57 @@ const categoryFilters = [
 ];
 
 const Platforms = () => {
-  const [platforms, setPlatforms] = useState(platformsData);
+  const { user } = useAuth();
+  const userId = user?.id;
+  const [platforms, setPlatforms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'list'
   const [modalPlatform, setModalPlatform] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [syncingId, setSyncingId] = useState("");
+
+  const loadPlatforms = useCallback(async () => {
+    try {
+      const [{ data: catalogData }, { data: connectedData }] = await Promise.all([
+        api.get("/platforms"),
+        userId ? api.get("/platforms/connected") : Promise.resolve({ data: { platforms: [] } }),
+      ]);
+      const connected = new Map(connectedData.platforms.map((profile) => [profile.platformId, profile]));
+      setPlatforms(catalogData.platforms.map((item) => {
+        const details = platformsData.find((platform) => platform.id === item.id);
+        const profile = connected.get(item.id);
+        return { ...details, ...item, ...(profile ?? {}), id: item.id, categories: details?.categories ?? [item.category], tags: details?.tags ?? [], logoType: details?.logoType ?? item.id, isConnected: Boolean(profile), handle: profile?.handle ?? "" };
+      }));
+      setLoadError("");
+    } catch (requestError) {
+      setLoadError(requestError.response?.data?.message || "Could not load platforms. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.get("/platforms"),
+      userId ? api.get("/platforms/connected") : Promise.resolve({ data: { platforms: [] } }),
+    ]).then(([{ data: catalogData }, { data: connectedData }]) => {
+      if (!active) return;
+      const connected = new Map(connectedData.platforms.map((profile) => [profile.platformId, profile]));
+      setPlatforms(catalogData.platforms.map((item) => {
+        const details = platformsData.find((platform) => platform.id === item.id);
+        const profile = connected.get(item.id);
+        return { ...details, ...item, ...(profile ?? {}), id: item.id, categories: details?.categories ?? [item.category], tags: details?.tags ?? [], logoType: details?.logoType ?? item.id, isConnected: Boolean(profile), handle: profile?.handle ?? "" };
+      }));
+      setLoadError("");
+    }).catch((requestError) => {
+      if (active) setLoadError(requestError.response?.data?.message || "Could not load platforms. Please try again.");
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [userId]);
 
   // Compute category counts
   const categoryCounts = useMemo(() => {
@@ -67,12 +114,31 @@ const Platforms = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveConnection = ({ id, isConnected, handle }) => {
-    setPlatforms((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, isConnected, handle: handle || p.handle } : p
-      )
-    );
+  const handleSaveConnection = async ({ id, isConnected, handle }) => {
+    if (!isConnected) {
+      await api.delete(`/platforms/${id}`);
+      await loadPlatforms();
+      return;
+    }
+    await api.put(`/platforms/${id}`, { handle });
+    try {
+      await api.post(`/platforms/${id}/sync`);
+    } catch (error) {
+      await loadPlatforms();
+      throw new Error(`Handle connected. ${error.response?.data?.message || "Stats could not sync right now."}`, { cause: error });
+    }
+    await loadPlatforms();
+  };
+
+  const handleSync = async (id) => {
+    setSyncingId(id);
+    try {
+      await api.post(`/platforms/${id}/sync`);
+      await loadPlatforms();
+    } catch (error) {
+      await loadPlatforms();
+      setLoadError(error.response?.data?.message || "Could not sync this profile. Please try again.");
+    } finally { setSyncingId(""); }
   };
 
   return (
@@ -90,8 +156,8 @@ const Platforms = () => {
             </h1>
           </div>
           <p className="mt-2.5 max-w-2xl text-xs sm:text-sm text-[#5F5F5F] leading-relaxed">
-            Connect your coding profiles, track your progress and unlock your potential
-            across multiple platforms.
+            Link your public profile handles. Only platforms connected to your account
+            will appear as connected.
           </p>
         </div>
 
@@ -106,8 +172,8 @@ const Platforms = () => {
                 Track. Compare. Improve.
               </h3>
               <p className="mt-0.5 text-[11px] text-[#5F5F5F] leading-tight">
-                Connect your accounts and get real-time stats from all platforms in one
-                place.
+                Link your public handles here. Profile statistics appear when a platform
+                data integration is available.
               </p>
             </div>
           </div>
@@ -179,7 +245,10 @@ const Platforms = () => {
       </div>
 
       {/* Content Rendering: Grid vs List */}
-      {filteredPlatforms.length === 0 ? (
+      {loadError && <p role="alert" className="mb-5 rounded-xl bg-[#FFE2DE] p-3 text-sm text-[#B42318]">{loadError}</p>}
+      {loading ? (
+        <div className="rounded-3xl border border-[#E9E2D8] bg-white p-12 text-center text-sm text-[#5F5F5F]">Loading platform directory…</div>
+      ) : filteredPlatforms.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-[#E9E2D8] bg-white p-12 text-center">
           <SlidersHorizontal size={36} className="mx-auto text-[#FFA057]" />
           <h3 className="mt-4 text-lg font-bold text-[#171717]">No platforms found</h3>
@@ -205,6 +274,8 @@ const Platforms = () => {
               platform={platform}
               onConnect={handleOpenConnect}
               onManage={handleOpenConnect}
+              onSync={handleSync}
+              syncing={syncingId === platform.id}
             />
           ))}
 
@@ -242,18 +313,12 @@ const Platforms = () => {
                   <p className="text-xs text-[#5F5F5F] mt-1 max-w-xl line-clamp-1">
                     {platform.description}
                   </p>
+                  {platform.isConnected && <p className="mt-2 text-xs font-semibold text-[#5F5F5F]">Solved: {platform.solved ?? "—"} · Rating: {platform.rating ?? "—"} · {platform.syncStatus === "synced" ? "Synced" : platform.syncStatus === "unavailable" ? "Sync unavailable" : platform.syncStatus === "error" ? "Sync failed" : "Not synced"}</p>}
                 </div>
               </div>
 
               <div className="flex items-center justify-between sm:justify-end gap-5 pt-3 sm:pt-0 border-t sm:border-t-0 border-[#F2ECE4]">
-                <div className="flex items-center gap-4 text-xs">
-                  {platform.stats.map((stat) => (
-                    <div key={stat.label} className="text-right">
-                      <p className="text-[10px] text-[#7A7A7A]">{stat.label}</p>
-                      <p className="font-bold text-[#171717]">{stat.value}</p>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs text-[#7A7A7A]">{platform.isConnected ? `@${platform.handle}` : "No account connected"}</p>
 
                 <button
                   type="button"
@@ -266,6 +331,7 @@ const Platforms = () => {
                 >
                   {platform.isConnected ? "Manage" : "Connect"}
                 </button>
+                {platform.isConnected && <button type="button" disabled={syncingId === platform.id} onClick={() => handleSync(platform.id)} title="Sync profile stats" aria-label={`Sync ${platform.name} profile stats`} className="rounded-xl border border-[#E9E2D8] bg-white p-2 text-[#5F5F5F] hover:bg-[#FFF8EE] disabled:opacity-60"><RefreshCw className={syncingId === platform.id ? "animate-spin" : ""} size={16} /></button>}
               </div>
             </div>
           ))}

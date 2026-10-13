@@ -93,7 +93,9 @@ const Sidebar = ({ isOpen, onClose }) => {
           <div className="relative flex flex-col items-center">
             {/* Monitor graphic */}
             <div className="flex h-12 w-16 items-center justify-center rounded-lg border-2 border-[#FFA057] bg-white shadow-xs">
-              <span className="text-xs font-black text-[#FF8E3C]">{"</>"}</span>
+              <span className="text-xs font-black text-[#FF8E3C]">
+                {location.pathname.startsWith("/contests") ? "🏆" : "</>"}
+              </span>
             </div>
             <div className="h-1.5 w-6 bg-[#FFA057] rounded-b-sm"></div>
             <div className="h-1 w-10 bg-[#FFD05A] rounded-full mt-0.5"></div>
@@ -104,10 +106,14 @@ const Sidebar = ({ isOpen, onClose }) => {
         </div>
 
         <h2 className="mt-3 text-xs font-black tracking-wide text-[#171717]">
-          Build • Learn • Grow
+          {location.pathname.startsWith("/contests")
+            ? "Compete • Improve • Grow"
+            : "Build • Learn • Grow"}
         </h2>
         <p className="mt-1 text-[11px] leading-relaxed text-[#7A7A7A]">
-          Your coding journey, all in one place.
+          {location.pathname.startsWith("/contests")
+            ? "Every contest is a step closer to your goals."
+            : "Your coding journey, all in one place."}
         </p>
       </div>
     </div>
@@ -116,7 +122,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r border-[#E9E2D8] bg-[#FFFBF5] lg:block">
+      <aside className="app-sidebar hidden w-64 shrink-0 border-r border-[#E9E2D8] bg-[#FFFBF5] lg:block">
         <div className="sticky top-0 h-screen overflow-y-auto">{sidebarContent}</div>
       </aside>
 

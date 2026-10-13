@@ -31,7 +31,7 @@ const Hero = () => {
           </div>
         </div>
 
-        <div className="relative rounded-[2rem] bg-[#FFF0BE] p-10">
+        <div className="hero-visual relative rounded-[2rem] bg-[#FFF0BE] p-10">
           <div className="flex min-h-[320px] items-center justify-center">
             <div className="text-[120px] font-black text-[#FFA057]">{"</>"}</div>
           </div>

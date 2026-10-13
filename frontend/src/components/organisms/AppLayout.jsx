@@ -6,7 +6,7 @@ const AppLayout = ({ children, searchValue = "", onSearchChange }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#FFFBF5]">
+    <div className="app-shell flex min-h-screen bg-[#FFFBF5]">
       {/* Responsive Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 

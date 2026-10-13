@@ -6,7 +6,12 @@
     "dev": "node scripts/dev.mjs",
     "build": "npm --prefix frontend run build",
     "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix backend test",
+    "test:api": "npm --prefix backend test",
     "start:api": "npm --prefix backend start",
     "start:web": "npm --prefix frontend run dev"
+  },
+  "dependencies": {
+    "mongoose": "^9.11.1"
   }
 }

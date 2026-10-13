@@ -1,0 +1,569 @@
+openapi: 3.1.0
+info:
+  title: CodingHub API
+  version: 1.0.0
+  description: REST API for accounts, coding profiles, contest discovery, reminders, and progress.
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development API
+tags:
+  - name: Auth
+    description: Account registration, login, and bearer identity.
+  - name: Users
+    description: Operations on the authenticated user's account.
+  - name: Platforms
+    description: Public platform catalog and user-owned coding profiles.
+  - name: Dashboard
+    description: Private progress summary.
+  - name: Contests
+    description: Public contests and user-owned reminders/contest mutations.
+  - name: Leaderboard
+    description: Public aggregates from profiles that have actually synced.
+paths:
+  /health:
+    get:
+      tags: [Auth]
+      summary: Check API process health
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: API process is responding.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, const: true }
+                  status: { type: string, const: ok }
+        '406': { $ref: '#/components/responses/Problem' }
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register an account
+      operationId: registerAccount
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, email, password]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 80 }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201':
+          description: Account created.
+          headers:
+            Location: { schema: { type: string }, description: Current-user resource URI. }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Create a bearer session
+      operationId: loginAccount
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Authenticated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Read the authenticated account
+      operationId: getAuthenticatedAccount
+      responses:
+        '200':
+          description: Safe user projection.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Read the authenticated account
+      operationId: getCurrentUser
+      responses:
+        '200': { description: Safe user projection, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [Users]
+      summary: Update account name
+      operationId: updateCurrentUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name]
+              properties: { name: { type: string, minLength: 2, maxLength: 80 } }
+      responses:
+        '200': { description: Updated user, content: { application/json: { schema: { $ref: '#/components/schemas/UserResponse' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [Users]
+      summary: Delete the authenticated account and its profiles, reminders, idempotency results, and authored contests
+      operationId: deleteCurrentUser
+      responses:
+        '204': { description: Account deleted. }
+        '401': { $ref: '#/components/responses/Problem' }
+  /platforms:
+    get:
+      tags: [Platforms]
+      summary: Read the platform catalog
+      operationId: listPlatforms
+      security: []
+      responses:
+        '200':
+          description: Public catalog; supports ETag and If-None-Match.
+          headers:
+            ETag: { schema: { type: string } }
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, platforms]
+                properties:
+                  success: { type: boolean, const: true }
+                  platforms: { type: array, items: { $ref: '#/components/schemas/Platform' } }
+        '304': { description: Catalog has not changed. }
+        '406': { $ref: '#/components/responses/Problem' }
+  /platforms/connected:
+    get:
+      tags: [Platforms]
+      summary: Read the caller's connected profiles
+      operationId: listConnectedProfiles
+      responses:
+        '200':
+          description: User-owned profile snapshots; private no-store response.
+          content:
+            application/json:
+              schema: { type: object, properties: { success: { type: boolean }, platforms: { type: array, items: { $ref: '#/components/schemas/ConnectedProfile' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+  /platforms/{platformId}:
+    parameters:
+      - $ref: '#/components/parameters/PlatformId'
+    put:
+      tags: [Platforms]
+      summary: Connect or replace a platform handle
+      operationId: connectPlatform
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [handle]
+              properties: { handle: { type: string, minLength: 1, maxLength: 80 } }
+      responses:
+        '200':
+          description: Connected profile saved.
+          content:
+            application/json:
+              schema: { type: object, properties: { success: { type: boolean }, platform: { $ref: '#/components/schemas/ConnectedProfile' } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [Platforms]
+      summary: Disconnect a platform
+      operationId: disconnectPlatform
+      responses:
+        '204': { description: Profile disconnected. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /platforms/{platformId}/sync:
+    parameters:
+      - $ref: '#/components/parameters/PlatformId'
+    post:
+      tags: [Platforms]
+      summary: Refresh a connected profile snapshot
+      operationId: syncPlatformProfile
+      description: Codeforces and LeetCode adapters are implemented. Other catalog providers return 501. Transient upstream failures are retried at most twice.
+      responses:
+        '200': { description: Synced profile, content: { application/json: { schema: { type: object, properties: { success: { type: boolean }, platform: { $ref: '#/components/schemas/ConnectedProfile' } } } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+        '501': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+        '504': { $ref: '#/components/responses/Problem' }
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Read caller dashboard and derived profile totals
+      operationId: getDashboard
+      responses:
+        '200':
+          description: Dashboard projection; private no-store response.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DashboardResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /contests:
+    get:
+      tags: [Contests]
+      summary: List and filter contests
+      operationId: listContests
+      security: []
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: platform, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string, enum: [live, upcoming, completed] } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: If-None-Match, in: header, schema: { type: string } }
+      responses:
+        '200':
+          description: Filtered page, pagination, and summary; public short cache with ETag.
+          headers:
+            ETag: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContestListResponse' }
+        '304': { description: Representation has not changed. }
+        '422': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [Contests]
+      summary: Create a contest
+      operationId: createContest
+      parameters:
+        - { name: Idempotency-Key, in: header, required: false, schema: { type: string, minLength: 8, maxLength: 128 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContestInput' }
+      responses:
+        '201':
+          description: Contest created or an idempotent replay.
+          headers:
+            Location: { schema: { type: string } }
+            Idempotency-Replayed: { schema: { type: string, enum: ['true'] } }
+          content:
+            application/json:
+              schema: { type: object, properties: { success: { type: boolean }, contest: { $ref: '#/components/schemas/Contest' } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /contests/{contestId}:
+    parameters:
+      - { name: contestId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Contests]
+      summary: Read contest details
+      operationId: getContest
+      security: []
+      responses:
+        '200':
+          description: Public contest with ETag.
+          headers: { ETag: { schema: { type: string } } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContestResponse' }
+        '304': { description: Contest has not changed. }
+        '422': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [Contests]
+      summary: Update a contest created by the caller
+      operationId: updateContest
+      parameters:
+        - { name: If-Match, in: header, required: false, schema: { type: string }, description: Stale entity tags fail with 412. }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContestPatch' }
+      responses:
+        '200':
+          description: Updated contest and new ETag.
+          headers: { ETag: { schema: { type: string } } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContestResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [Contests]
+      summary: Delete a contest created by the caller
+      operationId: deleteContest
+      responses:
+        '204': { description: Contest deleted. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /contests/reminders:
+    get:
+      tags: [Contests]
+      summary: Read caller's contest reminders
+      operationId: listContestReminders
+      responses:
+        '200':
+          description: Private reminder ID list; no-store.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReminderResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /contests/{contestId}/reminder:
+    parameters:
+      - { name: contestId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Contests]
+      summary: Add a contest reminder (idempotent)
+      operationId: addContestReminder
+      responses:
+        '200':
+          description: Updated caller reminder list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReminderResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [Contests]
+      summary: Remove a contest reminder (idempotent)
+      operationId: removeContestReminder
+      responses:
+        '200':
+          description: Updated caller reminder list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReminderResponse' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /leaderboard:
+    get:
+      tags: [Leaderboard]
+      summary: Read public aggregate profile statistics
+      operationId: getLeaderboard
+      security: []
+      responses:
+        '200':
+          description: Public leaderboard; unsynced statistics are null, not fabricated zeroes; ETag enabled.
+          headers: { ETag: { schema: { type: string } } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LeaderboardResponse' }
+        '304': { description: Leaderboard has not changed. }
+        '406': { $ref: '#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    PlatformId:
+      name: platformId
+      in: path
+      required: true
+      schema: { type: string, enum: [codeforces, leetcode, codechef, hackerrank, atcoder] }
+  responses:
+    Problem:
+      description: RFC 9457-style API error with stable CodingHub extensions.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, requestId]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        requestId: { type: string }
+        message: { type: string, description: Compatibility extension for the current UI. }
+        errors: { type: array, items: { type: object, properties: { field: { type: string }, message: { type: string } } } }
+    User:
+      type: object
+      required: [id, name, email, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        createdAt: { type: string, format: date-time }
+    UserResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        user: { $ref: '#/components/schemas/User' }
+    AuthResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        user: { $ref: '#/components/schemas/User' }
+        token: { type: string }
+    Platform:
+      type: object
+      required: [id, name, category, description]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        description: { type: string }
+    ConnectedProfile:
+      type: object
+      required: [platformId, name, handle, connectedAt]
+      properties:
+        platformId: { type: string }
+        name: { type: string }
+        handle: { type: string }
+        connectedAt: { type: string, format: date-time }
+        solved: { type: [integer, 'null'], minimum: 0 }
+        rating: { type: [number, 'null'] }
+        maxRating: { type: [number, 'null'] }
+        rank: { type: [string, integer, 'null'] }
+        contests: { type: [integer, 'null'] }
+        syncStatus: { type: string, enum: [pending, synced, unavailable, error] }
+        syncError: { type: [string, 'null'] }
+        lastSyncedAt: { type: string, format: date-time }
+    ContestInput:
+      type: object
+      additionalProperties: false
+      required: [title, platform, url]
+      anyOf:
+        - required: [startAt]
+        - required: [startDate]
+      properties:
+        title: { type: string, minLength: 1 }
+        platform: { type: string, minLength: 1 }
+        startAt: { type: string, format: date-time }
+        startDate: { type: string, description: ISO date/time accepted for compatibility. }
+        url: { type: string, format: uri }
+        duration: { type: string }
+        participants: { type: [string, integer] }
+        status: { type: string, enum: [live, upcoming, completed] }
+        description: { type: string }
+        tags: { type: array, items: { type: object, required: [label], properties: { label: { type: string }, variant: { type: string } } } }
+    ContestPatch:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        title: { type: string }
+        platform: { type: string }
+        startAt: { type: string, format: date-time }
+        startDate: { type: string }
+        url: { type: string, format: uri }
+        duration: { type: string }
+        participants: { type: [string, integer] }
+        status: { type: string, enum: [live, upcoming, completed] }
+        description: { type: string }
+        tags: { type: array, items: { type: object, required: [label], properties: { label: { type: string }, variant: { type: string } } } }
+    Contest:
+      type: object
+      required: [id, title, platform, startAt, url, status, createdBy, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        platform: { type: string }
+        startAt: { type: string, format: date-time }
+        startDate: { type: string }
+        startTime: { type: string }
+        url: { type: string, format: uri }
+        duration: { type: string }
+        participants: { type: [string, integer] }
+        tags: { type: array, items: { type: object } }
+        status: { type: string, enum: [live, upcoming, completed] }
+        createdBy: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+    ContestResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        contest: { $ref: '#/components/schemas/Contest' }
+    ContestListResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        contests: { type: array, items: { $ref: '#/components/schemas/Contest' } }
+        pagination:
+          type: object
+          properties:
+            page: { type: integer }
+            limit: { type: integer }
+            total: { type: integer }
+            pages: { type: integer }
+        summary:
+          type: object
+          properties:
+            live: { type: integer }
+            next24Hours: { type: integer }
+            thisWeek: { type: integer }
+    ReminderResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        reminders: { type: array, items: { type: string, format: uuid } }
+    DashboardResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        dashboard:
+          type: object
+          properties:
+            user: { type: object, properties: { id: { type: string }, name: { type: string } } }
+            connectedPlatforms: { type: array, items: { $ref: '#/components/schemas/ConnectedProfile' } }
+            reminders: { type: array, items: { type: string, format: uuid } }
+            stats:
+              type: object
+              properties:
+                connectedPlatforms: { type: integer }
+                problemsSolved: { type: [integer, 'null'] }
+                averageRating: { type: [integer, 'null'] }
+    LeaderboardResponse:
+      type: object
+      properties:
+        success: { type: boolean, const: true }
+        leaderboard:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              name: { type: string }
+              problemsSolved: { type: [integer, 'null'] }
+              rating: { type: [integer, 'null'] }
+              joinedAt: { type: string, format: date-time }
+security:
+  - bearerAuth: []

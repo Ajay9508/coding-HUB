@@ -1,0 +1,58 @@
+services:
+  mongo:
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?Set MongoDB username in .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?Set MongoDB password in .env}
+    volumes:
+      - codinghub-mongodb:/data/db
+    ports:
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--username", "${MONGO_INITDB_ROOT_USERNAME}", "--password", "${MONGO_INITDB_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+      ENABLE_HSTS: ${ENABLE_HSTS:-false}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random value of at least 32 characters}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/codinghub?authSource=admin}
+      AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-20}
+      AUTH_RATE_WINDOW_MS: ${AUTH_RATE_WINDOW_MS:-900000}
+      PROFILE_SYNC_RATE_LIMIT: ${PROFILE_SYNC_RATE_LIMIT:-10}
+      PROFILE_SYNC_RATE_WINDOW_MS: ${PROFILE_SYNC_RATE_WINDOW_MS:-900000}
+      CONTEST_CREATE_RATE_LIMIT: ${CONTEST_CREATE_RATE_LIMIT:-30}
+      CONTEST_CREATE_RATE_WINDOW_MS: ${CONTEST_CREATE_RATE_WINDOW_MS:-3600000}
+      PROFILE_SYNC_TIMEOUT_MS: ${PROFILE_SYNC_TIMEOUT_MS:-12000}
+      CODEFORCES_API_URL: ${CODEFORCES_API_URL:-https://codeforces.com/api}
+      LEETCODE_GRAPHQL_URL: ${LEETCODE_GRAPHQL_URL:-https://leetcode.com/graphql/}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    expose:
+      - "5000"
+    restart: unless-stopped
+    stop_grace_period: 12s
+
+  web:
+    build:
+      context: ./frontend
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    restart: unless-stopped
+
+volumes:
+  codinghub-mongodb:

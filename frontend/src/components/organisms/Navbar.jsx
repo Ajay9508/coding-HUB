@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
-import { Search, Moon, LayoutGrid, Home, Trophy, Map, BookOpen } from "lucide-react";
+import { Search, LayoutGrid, Trophy, Map, BookOpen } from "lucide-react";
 import Logo from "../atoms/Logo";
 import Button from "../atoms/Button";
+import ThemeToggle from "../atoms/Theme";
 import { useAuth } from "../../context/useAuth";
 
 const Navbar = () => {
@@ -50,13 +51,7 @@ const Navbar = () => {
             <Search size={18} />
           </Link>
 
-          <button
-            type="button"
-            className="rounded-xl border border-[#E9E2D8] bg-white p-3 text-[#171717] hover:bg-[#FFF0DA] transition"
-            aria-label="Toggle theme"
-          >
-            <Moon size={18} />
-          </button>
+          <ThemeToggle />
 
           {user ? (
             <div className="flex items-center gap-2">
