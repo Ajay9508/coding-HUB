@@ -7,8 +7,11 @@ export const cachePublic = (maxAge = 60) => (_req, res, next) => {
 export const conditionalJson = (req, res, body) => {
     const etag = etagFor(body);
     res.set("ETag", etag);
-    const candidates = (req.get("If-None-Match") || "").split(",").map((value) => value.trim());
-    if (req.method === "GET" && candidates.some((candidate) => candidate === "*" || candidate === etag || candidate === `W/${etag}`)) {
+    const candidates = (req.get("If-None-Match") || "")
+        .split(",")
+        .map((value) => value.trim());
+    if (req.method === "GET" &&
+        candidates.some((candidate) => candidate === "*" || candidate === etag || candidate === `W/${etag}`)) {
         return res.status(304).end();
     }
     return res.json(body);

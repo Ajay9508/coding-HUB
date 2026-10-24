@@ -72,7 +72,8 @@ const syncLeetCode = async (handle) => {
 const syncers = { codeforces: syncCodeforces, leetcode: syncLeetCode };
 export const syncPlatformProfile = async (platformId, handle) => {
     const sync = syncers[platformId];
-    if (!sync)
-        throw Object.assign(new Error("Automatic stats sync is not available for this platform yet. Your handle is connected and can be retried later."), { status: 501, code: "provider_not_supported" });
-    return sync(handle);
+    if (sync) {
+        return sync(handle);
+    }
+    throw Object.assign(new Error("Live statistics are currently available only for Codeforces and LeetCode."), { status: 501, code: "platform_sync_unavailable", expose: true });
 };

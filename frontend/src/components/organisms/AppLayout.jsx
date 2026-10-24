@@ -1,9 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import TopHeader from "./TopHeader";
 
 const AppLayout = ({ children, searchValue = "", onSearchChange }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setSidebarOpen(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen]);
 
   return (
     <div className="app-shell flex min-h-screen bg-[#FFFBF5]">

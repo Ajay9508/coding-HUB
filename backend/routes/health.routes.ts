@@ -2,7 +2,7 @@ import { Router } from "express";
 
 const router = Router();
 
-router.get("/api/user", (_req, res) => {
+router.get("/api/health", (_req, res) => {
   res.set("Cache-Control", "no-store");
 
   res.status(200).json({

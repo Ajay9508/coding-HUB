@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Search, LayoutGrid, Trophy, Map, BookOpen } from "lucide-react";
+import { Search, LayoutGrid, Trophy, Code2, Map, BookOpen } from "lucide-react";
 import Logo from "../atoms/Logo";
 import Button from "../atoms/Button";
 import ThemeToggle from "../atoms/Theme";
@@ -14,12 +14,7 @@ const Navbar = () => {
         <Logo />
 
         {/* Nav Links with Icons */}
-        <div className="hidden items-center gap-7 md:flex text-sm font-semibold text-[#5F5F5F]">
-          {/* <Link to="/" className="flex items-center gap-1.5 text-[#171717] hover:text-[#FF7378] transition">
-            <Home size={16} />
-            Home
-          </Link> */}
-
+        <div className="hidden items-center gap-6 lg:flex text-sm font-semibold text-[#5F5F5F]">
           <Link to="/platforms" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <LayoutGrid size={16} />
             Platforms
@@ -28,6 +23,11 @@ const Navbar = () => {
           <Link to="/contests" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <Trophy size={16} />
             Contests
+          </Link>
+
+          <Link to="/ide" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
+            <Code2 size={16} />
+            IDE
           </Link>
 
           <Link to="/roadmaps" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">

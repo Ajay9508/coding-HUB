@@ -10,7 +10,10 @@ try {
   await connectDatabase();
   console.log(JSON.stringify(await migrateJsonFile(source), null, 2));
 } catch (error) {
-  console.error(`JSON migration failed (${source}); source file was not modified:`, error);
+  console.error(
+    `JSON migration failed (${source}); source file was not modified:`,
+    error,
+  );
   process.exitCode = 1;
 } finally {
   await closeDatabase();

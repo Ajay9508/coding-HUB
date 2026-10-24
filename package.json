@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "npm --prefix frontend run build",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
     "lint": "npm --prefix frontend run lint",
     "test": "npm --prefix backend test",
     "test:api": "npm --prefix backend test",

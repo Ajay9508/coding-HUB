@@ -26,7 +26,7 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const displayName = user?.name || "Ajay Kumar";
+  const displayName = user?.name || "Guest";
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -124,7 +124,7 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
               <div className="px-3 py-2 border-b border-[#F2ECE4]">
                 <p className="font-bold text-sm text-[#171717]">{displayName}</p>
                 <p className="text-xs text-[#7A7A7A] truncate">
-                  {user?.email || "amit.sharma@example.com"}
+                  {user?.email || "Explore CodingHub"}
                 </p>
               </div>
 

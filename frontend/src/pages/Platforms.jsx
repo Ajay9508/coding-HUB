@@ -13,6 +13,8 @@ const categoryFilters = [
   { id: "Competitive Programming", label: "Competitive Programming" },
   { id: "Interview Prep", label: "Interview Prep" },
   { id: "Practice", label: "Practice" },
+  { id: "Learning", label: "Learning" },
+  { id: "Math & Logic", label: "Math & Logic" },
 ];
 
 const Platforms = () => {
@@ -30,43 +32,56 @@ const Platforms = () => {
 
   const loadPlatforms = useCallback(async () => {
     try {
-      const [{ data: catalogData }, { data: connectedData }] = await Promise.all([
+      const [catalogRes, connectedRes] = await Promise.all([
         api.get("/platforms"),
         userId ? api.get("/platforms/connected") : Promise.resolve({ data: { platforms: [] } }),
       ]);
-      const connected = new Map(connectedData.platforms.map((profile) => [profile.platformId, profile]));
-      setPlatforms(catalogData.platforms.map((item) => {
-        const details = platformsData.find((platform) => platform.id === item.id);
-        const profile = connected.get(item.id);
-        return { ...details, ...item, ...(profile ?? {}), id: item.id, categories: details?.categories ?? [item.category], tags: details?.tags ?? [], logoType: details?.logoType ?? item.id, isConnected: Boolean(profile), handle: profile?.handle ?? "" };
-      }));
+      const catalogList = catalogRes.data?.platforms || [];
+      const connectedList = connectedRes.data?.platforms || [];
+
+      const connected = new Map(connectedList.map((p) => [p.platformId, p]));
+
+      // The catalog provides presentation metadata; connection and statistics always come from the API.
+      const merged = platformsData.map((platform) => {
+        const catalogItem = catalogList.find((c) => c.id === platform.id);
+        const serverProfile = connected.get(platform.id);
+        const profile = serverProfile;
+
+        return {
+          ...platform,
+          ...(catalogItem || {}),
+          ...(profile || {}),
+          id: platform.id,
+          categories: platform.categories || [platform.category],
+          tags: platform.tags || [],
+          logoType: platform.logoType || platform.id,
+          isConnected: Boolean(profile?.handle),
+          handle: profile?.handle || "",
+          solved: profile?.solved,
+          rating: profile?.rating,
+          syncStatus: profile?.syncStatus || "idle",
+        };
+      });
+
+      setPlatforms(merged);
       setLoadError("");
     } catch (requestError) {
-      setLoadError(requestError.response?.data?.message || "Could not load platforms. Please try again.");
+      setPlatforms([]);
+      setLoadError(
+        requestError.response?.data?.detail ||
+          "Could not load the platform directory. Check that the API is running.",
+      );
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
   useEffect(() => {
-    let active = true;
-    Promise.all([
-      api.get("/platforms"),
-      userId ? api.get("/platforms/connected") : Promise.resolve({ data: { platforms: [] } }),
-    ]).then(([{ data: catalogData }, { data: connectedData }]) => {
-      if (!active) return;
-      const connected = new Map(connectedData.platforms.map((profile) => [profile.platformId, profile]));
-      setPlatforms(catalogData.platforms.map((item) => {
-        const details = platformsData.find((platform) => platform.id === item.id);
-        const profile = connected.get(item.id);
-        return { ...details, ...item, ...(profile ?? {}), id: item.id, categories: details?.categories ?? [item.category], tags: details?.tags ?? [], logoType: details?.logoType ?? item.id, isConnected: Boolean(profile), handle: profile?.handle ?? "" };
-      }));
-      setLoadError("");
-    }).catch((requestError) => {
-      if (active) setLoadError(requestError.response?.data?.message || "Could not load platforms. Please try again.");
-    }).finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [userId]);
+    const task = window.setTimeout(() => {
+      void loadPlatforms();
+    }, 0);
+    return () => window.clearTimeout(task);
+  }, [loadPlatforms]);
 
   // Compute category counts
   const categoryCounts = useMemo(() => {
@@ -116,18 +131,26 @@ const Platforms = () => {
 
   const handleSaveConnection = async ({ id, isConnected, handle }) => {
     if (!isConnected) {
-      await api.delete(`/platforms/${id}`);
-      await loadPlatforms();
+      try {
+        await api.delete(`/platforms/${id}`);
+        await loadPlatforms();
+      } catch (requestError) {
+        setLoadError(requestError.response?.data?.detail || "Could not disconnect this platform.");
+      }
       return;
     }
-    await api.put(`/platforms/${id}`, { handle });
+
     try {
+      await api.put(`/platforms/${id}`, { handle });
       await api.post(`/platforms/${id}/sync`);
-    } catch (error) {
       await loadPlatforms();
-      throw new Error(`Handle connected. ${error.response?.data?.message || "Stats could not sync right now."}`, { cause: error });
+    } catch (requestError) {
+      await loadPlatforms();
+      setLoadError(
+        requestError.response?.data?.detail ||
+          "The platform was connected, but its live statistics could not be synchronized.",
+      );
     }
-    await loadPlatforms();
   };
 
   const handleSync = async (id) => {
@@ -135,10 +158,11 @@ const Platforms = () => {
     try {
       await api.post(`/platforms/${id}/sync`);
       await loadPlatforms();
-    } catch (error) {
-      await loadPlatforms();
-      setLoadError(error.response?.data?.message || "Could not sync this profile. Please try again.");
-    } finally { setSyncingId(""); }
+    } catch (requestError) {
+      setLoadError(requestError.response?.data?.detail || "Could not synchronize this platform.");
+    } finally {
+      setSyncingId("");
+    }
   };
 
   return (

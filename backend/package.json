@@ -9,7 +9,8 @@
     "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "test": "npm run build && node --test",
-    "migrate:json": "tsx scripts/migrate-json-to-mongo.ts"
+    "migrate:json": "tsx scripts/migrate-json-to-mongo.ts",
+    "seed:development": "tsx scripts/seed-development.ts"
   },
   "keywords": [],
   "author": "",

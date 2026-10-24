@@ -1,384 +1,156 @@
-import { useState, useMemo, useEffect } from "react";
-import {
-  Radio,
-  Clock,
-  Calendar,
-  Bell,
-  LayoutGrid,
-  List,
-  Search,
-} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Calendar, LayoutGrid, List, Plus, Search, X } from "lucide-react";
 import AppLayout from "../components/organisms/AppLayout";
 import ContestCard from "../components/molecules/ContestCard";
 import ContestRow from "../components/molecules/ContestRow";
 import ContestCalendarWidget from "../components/molecules/ContestCalendarWidget";
-import {
-  RecommendedForYouWidget,
-  YourRemindersWidget,
-  SyncGoogleCalendarWidget,
-} from "../components/molecules/ContestSideWidgets";
-import { PlatformLogo } from "../components/molecules/PlatformCard";
+import { YourRemindersWidget } from "../components/molecules/ContestSideWidgets";
 import { useAuth } from "../context/useAuth";
 import api from "../api";
 
-const platformFilterOptions = [
-  { id: "all", label: "All", icon: "all" },
-  { id: "Codeforces", label: "Codeforces", logoType: "codeforces" },
-  { id: "LeetCode", label: "LeetCode", logoType: "leetcode" },
-  { id: "CodeChef", label: "CodeChef", logoType: "codechef" },
-  { id: "AtCoder", label: "AtCoder", logoType: "atcoder" },
-  { id: "HackerRank", label: "HackerRank", logoType: "hackerrank" },
-];
-
-const statusFilterOptions = [
-  { id: "all", label: "All" },
-  { id: "live", label: "Live Now" },
-  { id: "upcoming", label: "Upcoming" },
-  { id: "completed", label: "Completed" },
-  { id: "reminders", label: "My Reminders" },
-];
+const toContestView = (contest) => {
+  const start = new Date(contest.startAt ?? contest.startDate);
+  return {
+    ...contest,
+    startDate: Number.isNaN(start.getTime()) ? "Not reported" : start.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }),
+    startTime: Number.isNaN(start.getTime()) ? "" : start.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }),
+    subtitle: contest.description || contest.subtitle || contest.platform,
+    duration: contest.duration || "Not reported",
+    participants: contest.participants ?? "Not reported",
+    tags: Array.isArray(contest.tags) ? contest.tags : [],
+    logoType: contest.logoType || contest.platform?.toLowerCase().replace(/[^a-z]/g, ""),
+  };
+};
 
 const Contests = () => {
   const { user } = useAuth();
-  const userId = user?.id;
   const [contests, setContests] = useState([]);
+  const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("all");
-  const [selectedStatus, setSelectedStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'list'
-  const [reminders, setReminders] = useState([]);
-  const [summary, setSummary] = useState({ live: 0, next24Hours: 0, thisWeek: 0 });
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-        api.get("/contests", { params: { limit: 100 } }),
-        userId ? api.get("/contests/reminders") : Promise.resolve({ data: { reminders: [] } }),
-    ]).then(([{ data: contestData }, reminderData]) => {
-      if (!active) return;
-      setContests(contestData.contests.map((contest) => ({ ...contest, tags: contest.tags ?? [], logoType: contest.logoType ?? contest.platform?.toLowerCase().replace(/[^a-z]/g, ""), subtitle: contest.subtitle ?? contest.platform })));
-      setSummary(contestData.summary ?? { live: 0, next24Hours: 0, thisWeek: 0 });
-      setReminders(reminderData.data.reminders);
+  const [platform, setPlatform] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
+  const [showCreate, setShowCreate] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({ title: "", platform: "", startAt: "", url: "", duration: "" });
+
+  const loadContests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/contests", { params: { limit: 100 } });
+      setContests((data.contests || []).map(toContestView));
+      if (user) {
+        const reminderResponse = await api.get("/contests/reminders");
+        setReminders(reminderResponse.data.reminders || []);
+      } else {
+        setReminders([]);
+      }
       setError("");
-    }).catch((requestError) => {
-      if (active) setError(requestError.response?.data?.message || "Could not load contests.");
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, [userId]);
+    } catch (requestError) {
+      setContests([]);
+      setError(requestError.response?.data?.detail || "Could not load contests. Check that the API is running.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const task = window.setTimeout(() => {
+      void loadContests();
+    }, 0);
+    return () => window.clearTimeout(task);
+  }, [loadContests]);
+
+  const platforms = useMemo(
+    () => [...new Set(contests.map((contest) => contest.platform).filter(Boolean))].sort(),
+    [contests],
+  );
+
+  const filteredContests = useMemo(
+    () => contests.filter((contest) => {
+      const matchesPlatform = platform === "all" || contest.platform === platform;
+      const matchesStatus = status === "all" || (status === "reminders" ? reminders.includes(contest.id) : contest.status === status);
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch = !query || [contest.title, contest.platform, contest.subtitle].filter(Boolean).some((value) => value.toLowerCase().includes(query));
+      return matchesPlatform && matchesStatus && matchesSearch;
+    }),
+    [contests, platform, reminders, searchQuery, status],
+  );
 
   const toggleReminder = async (contestId) => {
     if (!user) {
-      setError("Sign in to save contest reminders.");
+      setError("Sign in to save a contest reminder.");
       return;
     }
-    setError("");
     try {
       if (reminders.includes(contestId)) await api.delete(`/contests/${contestId}/reminder`);
       else await api.put(`/contests/${contestId}/reminder`);
       const { data } = await api.get("/contests/reminders");
-      setReminders(data.reminders);
+      setReminders(data.reminders || []);
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Could not update this reminder.");
+      setError(requestError.response?.data?.detail || "Could not update your reminder.");
     }
   };
 
-  // Filtered contest list
-  const filteredContests = useMemo(() => {
-    return contests.filter((contest) => {
-      // Platform filter
-      const matchesPlatform =
-        selectedPlatform === "all" || contest.platform === selectedPlatform;
-
-      // Status filter
-      let matchesStatus = true;
-      if (selectedStatus === "reminders") {
-        matchesStatus = reminders.includes(contest.id);
-      } else if (selectedStatus !== "all") {
-        matchesStatus = contest.status === selectedStatus;
-      }
-
-      // Search query
-      const matchesSearch =
-        searchQuery.trim() === "" ||
-        contest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contest.platform.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contest.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contest.tags.some((tag) =>
-          tag.label.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-
-      return matchesPlatform && matchesStatus && matchesSearch;
-    });
-  }, [contests, selectedPlatform, selectedStatus, searchQuery, reminders]);
+  const createContest = async (event) => {
+    event.preventDefault();
+    if (!user) {
+      setError("Sign in before creating a contest.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post("/contests", {
+        title: form.title.trim(),
+        platform: form.platform.trim(),
+        startAt: new Date(form.startAt).toISOString(),
+        url: form.url.trim(),
+        duration: form.duration.trim() || undefined,
+      }, { headers: { "Idempotency-Key": crypto.randomUUID() } });
+      setForm({ title: "", platform: "", startAt: "", url: "", duration: "" });
+      setShowCreate(false);
+      await loadContests();
+    } catch (requestError) {
+      setError(requestError.response?.data?.detail || "Could not create this contest.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <AppLayout searchValue={searchQuery} onSearchChange={setSearchQuery}>
-      {error && <p role="alert" className="mb-5 rounded-xl bg-[#FFE2DE] p-3 text-sm text-[#B42318]">{error}</p>}
-      {/* Top Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#FED7B2] bg-gradient-to-r from-[#FFF4E6] via-[#FEEBD9] to-[#FEDBC0] p-6 sm:p-8 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-5">
-            {/* Big Golden Trophy */}
-            <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-b from-[#FFE8B2] to-[#FFD05A] text-3xl sm:text-4xl shadow-sm border-2 border-white/80">
-              🏆
-            </div>
-
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#171717] tracking-tight">
-                Coding Contests
-              </h1>
-              <p className="mt-2 text-xs sm:text-sm text-[#5F5F5F] max-w-xl leading-relaxed">
-                Discover upcoming and ongoing coding contests from top platforms.
-                Sharpen your skills, climb the rankings and achieve your goals!
-              </p>
-            </div>
-          </div>
-
-          {/* Right illustration & doodle */}
-          <div className="hidden md:flex items-center gap-6 shrink-0">
-            <div className="text-right">
-              <span className="font-caveat text-sm font-bold text-[#FF8E3C] italic block">
-                Better Code,
-              </span>
-              <span className="font-caveat text-base font-extrabold text-[#EA580C] italic block">
-                Bigger Dreams ✨
-              </span>
-            </div>
-
-            <div className="relative flex h-20 w-24 items-center justify-center rounded-2xl bg-white/60 backdrop-blur-xs border border-white p-2">
-              <div className="text-3xl">👨‍💻</div>
-              <span className="absolute -top-1 -right-1 text-xs">🏔️</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4 Quick Stat Metric Cards */}
-      <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Live Now */}
-        <div className="rounded-3xl border border-[#E9E2D8] bg-white p-5 shadow-xs flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFE9E9] text-[#EF4444]">
-            <Radio size={22} className="animate-pulse" />
-          </div>
+      <section className="rounded-3xl border border-[#FED7B2] bg-gradient-to-r from-[#FFF4E6] via-[#FEEBD9] to-[#FEDBC0] p-6 sm:p-8 shadow-xs">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold text-[#7A7A7A]">Live Now</p>
-            <h2 className="text-2xl font-black text-[#171717]">{summary.live}</h2>
-            <p className="text-[11px] text-[#9A9A9A] truncate">Contests are live right now</p>
+            <p className="text-xs font-black tracking-wider text-[#F35F67]">CONTEST DIRECTORY</p>
+            <h1 className="mt-1 text-3xl font-black tracking-tight text-[#171717]">Coding Contests</h1>
+            <p className="mt-2 max-w-xl text-sm text-[#5F5F5F]">Only contests saved to CodingHub are shown here—no sample schedules or simulated rounds.</p>
           </div>
+          {user && <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#171717] px-5 py-3 text-xs font-bold text-white hover:bg-black"><Plus size={16} /> Add contest</button>}
         </div>
+      </section>
 
-        {/* Next 24 Hours */}
-        <div className="rounded-3xl border border-[#E9E2D8] bg-white p-5 shadow-xs flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EBF5FF] text-[#2563EB]">
-            <Clock size={22} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-[#7A7A7A]">Next 24 Hours</p>
-            <h2 className="text-2xl font-black text-[#171717]">{summary.next24Hours}</h2>
-            <p className="text-[11px] text-[#9A9A9A] truncate">Contests starting soon</p>
-          </div>
+      {error && <p role="alert" className="mt-6 rounded-2xl bg-[#FFE2DE] p-4 text-sm font-bold text-[#B42318]">{error}</p>}
+
+      <section className="mt-6 flex flex-col gap-4 rounded-3xl border border-[#E9E2D8] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <select value={platform} onChange={(event) => setPlatform(event.target.value)} className="rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2 text-xs font-bold text-[#171717]">
+            <option value="all">All platforms</option>
+            {platforms.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          {["all", "live", "upcoming", "completed", "reminders"].map((item) => <button key={item} type="button" onClick={() => setStatus(item)} className={`rounded-xl px-3 py-2 text-xs font-bold capitalize ${status === item ? "bg-[#FFD05A] text-[#171717]" : "border border-[#E9E2D8] text-[#5F5F5F]"}`}>{item === "reminders" ? "My reminders" : item}</button>)}
         </div>
+        <div className="flex items-center gap-2 self-end sm:self-auto"><Search size={15} className="text-[#7A7A7A]" /><span className="text-xs text-[#7A7A7A]">{filteredContests.length} results</span><button type="button" aria-label="Grid view" onClick={() => setViewMode("grid")} className={`rounded-lg p-2 ${viewMode === "grid" ? "bg-[#FFF0BE]" : "text-[#7A7A7A]"}`}><LayoutGrid size={16} /></button><button type="button" aria-label="List view" onClick={() => setViewMode("list")} className={`rounded-lg p-2 ${viewMode === "list" ? "bg-[#FFF0BE]" : "text-[#7A7A7A]"}`}><List size={16} /></button></div>
+      </section>
 
-        {/* This Week */}
-        <div className="rounded-3xl border border-[#E9E2D8] bg-white p-5 shadow-xs flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF2E5] text-[#EA580C]">
-            <Calendar size={22} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-[#7A7A7A]">This Week</p>
-            <h2 className="text-2xl font-black text-[#171717]">{summary.thisWeek}</h2>
-            <p className="text-[11px] text-[#9A9A9A] truncate">Total contests</p>
-          </div>
-        </div>
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_300px]">
+        <div>{loading ? <div className="rounded-3xl border border-[#E9E2D8] bg-white p-12 text-center text-sm text-[#5F5F5F]">Loading contests…</div> : filteredContests.length === 0 ? <div className="rounded-3xl border border-dashed border-[#E9E2D8] bg-white p-12 text-center"><Calendar size={34} className="mx-auto text-[#FFA057]" /><h2 className="mt-3 text-lg font-bold text-[#171717]">No contests to show</h2><p className="mt-1 text-xs text-[#7A7A7A]">Add a verified contest or change the selected filters.</p></div> : viewMode === "grid" ? <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">{filteredContests.map((contest) => <ContestCard key={contest.id} contest={contest} isSaved={reminders.includes(contest.id)} onToggleReminder={toggleReminder} />)}</div> : <div className="space-y-4">{filteredContests.map((contest) => <ContestRow key={contest.id} contest={contest} isSaved={reminders.includes(contest.id)} onToggleReminder={toggleReminder} />)}</div>}</div>
+        <aside className="space-y-5"><ContestCalendarWidget contests={contests} /><YourRemindersWidget reminders={reminders} contests={contests} onToggleReminder={toggleReminder} /></aside>
+      </section>
 
-        {/* Saved Reminders */}
-        <div className="rounded-3xl border border-[#E9E2D8] bg-white p-5 shadow-xs flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0BE] text-[#D97706]">
-            <Bell size={22} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-[#7A7A7A]">Saved Reminders</p>
-            <h2 className="text-2xl font-black text-[#171717]">{reminders.length}</h2>
-            <p className="text-[11px] text-[#9A9A9A] truncate">Don't miss your favorites</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Row 1: Platform Pills + Search + View Switcher */}
-      <div className="mt-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Platform Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-          {platformFilterOptions.map((opt) => {
-            const isActive = selectedPlatform === opt.id;
-            return (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setSelectedPlatform(opt.id)}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-2xl px-3.5 py-2 text-xs font-bold transition shadow-xs ${
-                  isActive
-                    ? "bg-[#FFD05A] text-[#171717]"
-                    : "border border-[#E9E2D8] bg-white text-[#5F5F5F] hover:bg-[#FFF8EE] hover:text-[#171717]"
-                }`}
-              >
-                {opt.id === "all" ? (
-                  <span>🔥</span>
-                ) : (
-                  <div className="h-4 w-4 flex items-center justify-center">
-                    <PlatformLogo type={opt.logoType} />
-                  </div>
-                )}
-                <span>{opt.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search input + View Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 md:w-56">
-            <Search
-              size={14}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9A9A9A]"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search contests..."
-              className="h-10 w-full rounded-2xl border border-[#E9E2D8] bg-white pl-9 pr-3 text-xs text-[#171717] outline-none focus:border-[#FF8E3C]"
-            />
-          </div>
-
-          <div className="flex items-center rounded-2xl border border-[#E9E2D8] bg-white p-1 shadow-xs shrink-0">
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
-                viewMode === "grid"
-                  ? "bg-[#FFD05A] text-[#171717] shadow-xs"
-                  : "text-[#7A7A7A] hover:text-[#171717]"
-              }`}
-            >
-              <LayoutGrid size={13} />
-              Grid
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
-                viewMode === "list"
-                  ? "bg-[#FFD05A] text-[#171717] shadow-xs"
-                  : "text-[#7A7A7A] hover:text-[#171717]"
-              }`}
-            >
-              <List size={13} />
-              List
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Row 2: Status Filter Pills */}
-      <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {statusFilterOptions.map((opt) => {
-          const isActive = selectedStatus === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setSelectedStatus(opt.id)}
-              className={`whitespace-nowrap rounded-2xl px-4 py-1.5 text-xs font-bold transition ${
-                isActive
-                  ? "bg-[#FF8E3C] text-white shadow-xs"
-                  : "border border-[#E9E2D8] bg-white text-[#7A7A7A] hover:bg-[#FFF8EE] hover:text-[#171717]"
-              }`}
-            >
-              {opt.label}
-              {opt.id === "reminders" && ` (${reminders.length})`}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Main Two-Column Layout (Contests Grid + Right Panel Widgets) */}
-      <div className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        {/* Left 2 Columns: Contests Grid or List */}
-        <div className="xl:col-span-2 space-y-6">
-          {loading ? (
-            <div className="rounded-3xl border border-dashed border-[#E9E2D8] bg-white p-12 text-center text-sm text-[#5F5F5F]">Loading contests…</div>
-          ) : filteredContests.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-[#E9E2D8] bg-white p-12 text-center">
-              <Calendar size={36} className="mx-auto text-[#FFA057]" />
-              <h3 className="mt-4 text-base font-bold text-[#171717]">No contests found</h3>
-              <p className="mt-1 text-xs text-[#7A7A7A]">
-                {contests.length === 0 ? "No contest feed is configured yet. Contests added through the API will appear here." : "Try adjusting your platform filters, status, or search keywords."}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedPlatform("all");
-                  setSelectedStatus("all");
-                  setSearchQuery("");
-                }}
-                className="mt-4 rounded-2xl bg-[#FFD05A] px-5 py-2 text-xs font-bold text-[#171717] hover:bg-[#FFA057] transition"
-              >
-                Reset Filters
-              </button>
-            </div>
-          ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {filteredContests.map((contest) => (
-                <ContestCard
-                  key={contest.id}
-                  contest={contest}
-                  isSaved={reminders.includes(contest.id)}
-                  onToggleReminder={toggleReminder}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3.5">
-              {filteredContests.map((contest) => (
-                <ContestRow
-                  key={contest.id}
-                  contest={contest}
-                  isSaved={reminders.includes(contest.id)}
-                  onToggleReminder={toggleReminder}
-                />
-              ))}
-            </div>
-          )}
-
-        </div>
-
-        {/* Right 1 Column: Side Widgets */}
-        <div className="space-y-5">
-          {/* Calendar Widget */}
-          <ContestCalendarWidget contests={contests} />
-
-          {/* Recommended for You Widget */}
-          <RecommendedForYouWidget
-            contests={contests}
-            onSelectContest={(contest) => {
-              setSearchQuery(contest.title);
-            }}
-          />
-
-          {/* Your Reminders Widget */}
-          <YourRemindersWidget
-            reminders={reminders}
-            contests={contests}
-            onToggleReminder={toggleReminder}
-          />
-
-          {/* Sync Google Calendar Widget */}
-          <SyncGoogleCalendarWidget />
-        </div>
-      </div>
+      {showCreate && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowCreate(false)}><form onSubmit={createContest} onClick={(event) => event.stopPropagation()} className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl"><div className="flex items-center justify-between border-b border-[#F2ECE4] pb-4"><h2 className="text-lg font-black text-[#171717]">Add a contest</h2><button type="button" aria-label="Close" onClick={() => setShowCreate(false)} className="rounded-lg p-1 text-[#5F5F5F]"><X size={18} /></button></div><div className="mt-5 space-y-4"><input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Contest title" className="w-full rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2.5 text-sm" /><input required value={form.platform} onChange={(event) => setForm({ ...form, platform: event.target.value })} placeholder="Platform (for example, Codeforces)" className="w-full rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2.5 text-sm" /><input required type="datetime-local" value={form.startAt} onChange={(event) => setForm({ ...form, startAt: event.target.value })} className="w-full rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2.5 text-sm" /><input required type="url" value={form.url} onChange={(event) => setForm({ ...form, url: event.target.value })} placeholder="Official contest URL" className="w-full rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2.5 text-sm" /><input value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder="Duration (optional, for example 2 hours)" className="w-full rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2.5 text-sm" /></div><div className="mt-6 flex justify-end gap-3"><button type="button" onClick={() => setShowCreate(false)} className="rounded-xl border border-[#E9E2D8] px-4 py-2 text-xs font-bold text-[#5F5F5F]">Cancel</button><button disabled={submitting} type="submit" className="rounded-xl bg-[#171717] px-4 py-2 text-xs font-bold text-white disabled:opacity-60">{submitting ? "Adding…" : "Add contest"}</button></div></form></div>}
     </AppLayout>
   );
 };

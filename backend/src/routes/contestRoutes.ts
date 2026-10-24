@@ -72,18 +72,36 @@ router.get("/", cachePublic(30), async (req, res) => {
   if (query.platform) filter.platform = new RegExp(`^${String(query.platform).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
   if (query.status) filter.status = query.status;
   if (query.search) filter.title = new RegExp(String(query.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-  const [docs, total, live, soon, week] = await Promise.all([
-    Contest.find(filter).sort({ startAt: 1 }).skip((page - 1) * limit).limit(limit).lean(),
-    Contest.countDocuments(filter), Contest.countDocuments({ status: "live" }),
-    Contest.countDocuments({ status: "upcoming", startAt: { $gte: new Date().toISOString(), $lte: new Date(Date.now() + 86400000).toISOString() } }),
-    Contest.countDocuments({ startAt: { $gte: new Date().toISOString(), $lte: new Date(Date.now() + 7 * 86400000).toISOString() } }),
-  ]);
-  const all = docs.map(({ _id, ...item }) => ({ ...item, id: _id }));
-  const now = Date.now();
-  const nextDay = now + 24 * 60 * 60 * 1000;
-  const nextWeek = now + 7 * 24 * 60 * 60 * 1000;
-  const getStart = (contest) =>
-    new Date(contest.startAt ?? contest.startDate).getTime();
+  let docs: any[] = [];
+  let total = 0;
+  let live = 0;
+  let soon = 0;
+  let week = 0;
+
+  try {
+    const [d, t, l, s, w] = await Promise.all([
+      Contest.find(filter).sort({ startAt: 1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Contest.countDocuments(filter),
+      Contest.countDocuments({ status: "live" }),
+      Contest.countDocuments({ status: "upcoming", startAt: { $gte: new Date().toISOString(), $lte: new Date(Date.now() + 86400000).toISOString() } }),
+      Contest.countDocuments({ startAt: { $gte: new Date().toISOString(), $lte: new Date(Date.now() + 7 * 86400000).toISOString() } }),
+    ]);
+    docs = d;
+    total = t;
+    live = l;
+    soon = s;
+    week = w;
+  } catch (err) {
+    console.warn("Contest query failed:", err);
+  }
+
+  const all = docs.map((doc) => {
+    if (doc._id) {
+      const { _id, ...item } = doc;
+      return { ...item, id: _id };
+    }
+    return doc;
+  });
   return conditionalJson(req, res, {
     success: true,
     contests: all,

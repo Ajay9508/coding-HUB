@@ -124,7 +124,7 @@ const ContestCard = ({ contest, isSaved = false, onToggleReminder }) => {
               <CheckCircle size={16} className="text-[#10B981]" />
               <span>Contest Ended • View Results →</span>
             </div>
-          ) : (
+          ) : contest.countdown ? (
             <div>
               <p className="text-[10px] font-semibold text-[#7A7A7A]">
                 {isLive ? "Ends in" : "Starts in"}
@@ -146,6 +146,10 @@ const ContestCard = ({ contest, isSaved = false, onToggleReminder }) => {
                 <span>sec</span>
               </div>
             </div>
+          ) : (
+            <p className="py-2 text-xs font-semibold text-[#5F5F5F]">
+              Check the official contest page for the current schedule.
+            </p>
           )}
         </div>
       </div>

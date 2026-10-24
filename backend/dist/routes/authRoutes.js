@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { randomUUID } from "node:crypto";
-import { User } from "../services/store.js";
+import { createUser, findUserByEmail } from "../services/store.js";
 import { createToken, hashPassword, safeUser, verifyPassword, } from "../services/authService.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { problem, rejectUnknownFields, requireObjectBody, } from "../middleware/problem.js";
@@ -50,10 +50,10 @@ router.post("/register", authLimit, async (req, res) => {
         createdAt: new Date().toISOString(),
     };
     try {
-        await User.create({ _id: user.id, ...user });
+        await createUser(user);
     }
     catch (error) {
-        if (error?.code === 11000)
+        if (error?.code === 11000 || error?.status === 409)
             throw problem(409, "An account with this email already exists.", { code: "email_conflict" });
         throw error;
     }
@@ -69,7 +69,7 @@ router.post("/login", authLimit, async (req, res) => {
         ? req.body.email.trim().toLowerCase()
         : "";
     const password = typeof req.body?.password === "string" ? req.body.password : "";
-    const user = await User.findOne({ email }).select("+passwordHash").lean();
+    const user = await findUserByEmail(email);
     if (!user || !(await verifyPassword(password, user.passwordHash)))
         throw problem(401, "Incorrect email or password.", {
             code: "invalid_credentials",

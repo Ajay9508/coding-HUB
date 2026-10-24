@@ -39,11 +39,107 @@ export const PlatformLogo = ({ type }) => {
     case "atcoder":
       return (
         <div className="flex flex-col items-center">
-          <span className="text-sm font-black text-[#171717] tracking-tighter">AtCoder</span>
+          <span className="text-xs font-black text-[#171717] tracking-tighter">AtCoder</span>
+        </div>
+      );
+    case "topcoder":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0096D6] font-black text-white text-xs shadow-xs">
+          TC
+        </div>
+      );
+    case "spoj":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#1B365D] font-black text-white text-xs shadow-xs">
+          SP
+        </div>
+      );
+    case "geeksforgeeks":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2F8D46] font-black text-white text-xs shadow-xs">
+          GfG
+        </div>
+      );
+    case "hackerearth":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#323754] font-black text-[#2C95FF] text-xs shadow-xs">
+          {"{;}"}
+        </div>
+      );
+    case "codewars":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#AD2C27] font-black text-white text-xs shadow-xs">
+          ⚔️
+        </div>
+      );
+    case "exercism":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#009CAB] font-black text-white text-xs shadow-xs">
+          EX
+        </div>
+      );
+    case "projecteuler":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#8A3B14] font-black text-white text-xs shadow-xs">
+          ∑
+        </div>
+      );
+    case "dmoj":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#3949AB] font-black text-white text-xs shadow-xs">
+          DM
+        </div>
+      );
+    case "kattis":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2B6CB0] font-black text-white text-xs shadow-xs">
+          KT
+        </div>
+      );
+    case "usaco":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#E53E3E] font-black text-white text-xs shadow-xs">
+          🇺🇸
+        </div>
+      );
+    case "googlekickstart":
+      return (
+        <div className="flex items-center gap-0.5 font-black text-xs">
+          <span className="text-[#4285F4]">G</span>
+          <span className="text-[#EA4335]">K</span>
+          <span className="text-[#FBBC05]">S</span>
+        </div>
+      );
+    case "csacademy":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#6B46C1] font-black text-white text-xs shadow-xs">
+          CS
+        </div>
+      );
+    case "toph":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0D9488] font-black text-white text-xs shadow-xs">
+          TP
+        </div>
+      );
+    case "naukricode360":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FF5722] font-black text-white text-xs shadow-xs">
+          360
+        </div>
+      );
+    case "beecrowd":
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#F59E0B] font-black text-white text-xs shadow-xs">
+          🐝
         </div>
       );
     default:
-      return <span className="font-bold text-[#FF8E3C]">{"</>"}</span>;
+      return (
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FFF0BE] font-bold text-[#FF8E3C] text-xs">
+          {"</>"}
+        </div>
+      );
   }
 };
 
