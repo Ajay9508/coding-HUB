@@ -135,7 +135,7 @@ if (!(Test-Path .env)) { Copy-Item .env.example .env }
 docker compose up --build
 ```
 
-The frontend is available at <http://localhost:8080>; Nginx proxies `/api` to Express. MongoDB starts first and must pass its authenticated health check before the API starts. A named volume persists MongoDB data. `docker compose down` preserves it; `docker compose down -v` deletes it.
+The frontend is available at [<http://localhost:8080>](https://coding-hub-omega.vercel.app/); Nginx proxies `/api` to Express. MongoDB starts first and must pass its authenticated health check before the API starts. A named volume persists MongoDB data. `docker compose down` preserves it; `docker compose down -v` deletes it.
 
 ## Verification
 
