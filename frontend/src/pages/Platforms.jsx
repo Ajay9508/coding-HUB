@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { LayoutGrid, List, RefreshCw, SlidersHorizontal } from "lucide-react";
 import AppLayout from "../components/organisms/AppLayout";
 import PlatformCard, { PlatformLogo } from "../components/molecules/PlatformCard";
@@ -18,6 +19,7 @@ const categoryFilters = [
 ];
 
 const Platforms = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id;
   const [platforms, setPlatforms] = useState([]);
@@ -66,10 +68,20 @@ const Platforms = () => {
       setPlatforms(merged);
       setLoadError("");
     } catch (requestError) {
-      setPlatforms([]);
+      // Fall back to default catalog with 30 platforms
+      const fallbackList = platformsData.map((platform) => ({
+        ...platform,
+        categories: platform.categories || [platform.category],
+        tags: platform.tags || [],
+        logoType: platform.logoType || platform.id,
+        isConnected: false,
+        handle: "",
+        syncStatus: "idle",
+      }));
+      setPlatforms(fallbackList);
       setLoadError(
         requestError.response?.data?.detail ||
-          "Could not load the platform directory. Check that the API is running.",
+          "Could not load connected platforms from the API.",
       );
     } finally {
       setLoading(false);
@@ -118,11 +130,19 @@ const Platforms = () => {
   }, [platforms, activeCategory, searchQuery]);
 
   const handleOpenConnect = (platform) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     setModalPlatform(platform);
     setIsModalOpen(true);
   };
 
   const handleOpenNew = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     // default to first unconnected platform or first platform
     const unconnected = platforms.find((p) => !p.isConnected) || platforms[0];
     setModalPlatform(unconnected);
@@ -172,30 +192,30 @@ const Platforms = () => {
         {/* Title Area */}
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF0BE] text-[#171717] shadow-xs">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white shadow-xs">
               <LayoutGrid size={22} strokeWidth={2.3} />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-[#171717] tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black text-[#071B2B] dark:text-[#EEEEEE] tracking-tight">
               Coding Platforms
             </h1>
           </div>
-          <p className="mt-2.5 max-w-2xl text-xs sm:text-sm text-[#5F5F5F] leading-relaxed">
+          <p className="mt-2.5 max-w-2xl text-xs sm:text-sm text-[#526574] dark:text-[#cbd5e1] leading-relaxed">
             Link your public profile handles. Only platforms connected to your account
             will appear as connected.
           </p>
         </div>
 
         {/* Promo Card Banner (Track. Compare. Improve.) */}
-        <div className="flex items-center justify-between gap-4 rounded-3xl border border-[#FED7B2] bg-gradient-to-r from-[#FFF3E8] via-[#FEEBD9] to-[#FEDBC0] p-4 sm:p-5 shadow-xs max-w-md w-full shrink-0">
+        <div className="flex items-center justify-between gap-4 rounded-3xl border border-[#B9E4E8] bg-gradient-to-r from-[#B9E4E8]/60 via-[#EEEEEE] to-[#B9E4E8]/60 dark:from-[#071B2B] dark:via-[#0c263c] dark:to-[#167D8D] p-4 sm:p-5 shadow-xs max-w-md w-full shrink-0 dark:border-[#167D8D]/40">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-[#FF8E3C] shadow-xs">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white dark:bg-[#071B2B] text-[#167D8D] shadow-xs">
               <span className="font-black text-base">{"</>"}</span>
             </div>
             <div>
-              <h3 className="text-xs sm:text-sm font-black text-[#171717]">
+              <h3 className="text-xs sm:text-sm font-black text-[#071B2B] dark:text-[#EEEEEE]">
                 Track. Compare. Improve.
               </h3>
-              <p className="mt-0.5 text-[11px] text-[#5F5F5F] leading-tight">
+              <p className="mt-0.5 text-[11px] text-[#526574] dark:text-[#cbd5e1] leading-tight">
                 Link your public handles here. Profile statistics appear when a platform
                 data integration is available.
               </p>
@@ -204,10 +224,10 @@ const Platforms = () => {
 
           {/* Mini Developer Illustration */}
           <div className="hidden sm:flex relative shrink-0 items-center justify-center h-16 w-16">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFA057]/20 text-2xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#167D8D]/20 text-2xl">
               👨‍💻
             </div>
-            <span className="absolute -top-1 right-0 rounded-full bg-[#3B82F6] px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs">
+            <span className="absolute -top-1 right-0 rounded-full bg-[#167D8D] px-1.5 py-0.5 text-[9px] font-black text-white shadow-xs">
               {"</>"}
             </span>
           </div>
@@ -229,8 +249,8 @@ const Platforms = () => {
                 onClick={() => setActiveCategory(category.id)}
                 className={`whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all shadow-xs ${
                   isActive
-                    ? "bg-[#FFD05A] text-[#171717]"
-                    : "border border-[#E9E2D8] bg-white text-[#5F5F5F] hover:bg-[#FFF8EE] hover:text-[#171717]"
+                    ? "bg-[#167D8D] text-white"
+                    : "border border-[#B9E4E8] bg-white text-[#526574] hover:bg-[#B9E4E8]/40 hover:text-[#071B2B] dark:bg-[#0c2133] dark:text-[#EEEEEE] dark:border-[#167D8D]/40"
                 }`}
               >
                 {category.label} ({count})
@@ -240,14 +260,14 @@ const Platforms = () => {
         </div>
 
         {/* View Mode Switcher (Grid / List) */}
-        <div className="flex items-center self-end sm:self-auto rounded-2xl border border-[#E9E2D8] bg-white p-1 shadow-xs">
+        <div className="flex items-center self-end sm:self-auto rounded-2xl border border-[#B9E4E8] bg-white dark:bg-[#0c2133] dark:border-[#167D8D]/40 p-1 shadow-xs">
           <button
             type="button"
             onClick={() => setViewMode("grid")}
             className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
               viewMode === "grid"
-                ? "bg-[#FFF0BE] text-[#171717] shadow-xs"
-                : "text-[#7A7A7A] hover:text-[#171717]"
+                ? "bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white shadow-xs"
+                : "text-[#526574] dark:text-[#cbd5e1] hover:text-[#071B2B] dark:hover:text-white"
             }`}
           >
             <LayoutGrid size={15} />
@@ -258,8 +278,8 @@ const Platforms = () => {
             onClick={() => setViewMode("list")}
             className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
               viewMode === "list"
-                ? "bg-[#FFF0BE] text-[#171717] shadow-xs"
-                : "text-[#7A7A7A] hover:text-[#171717]"
+                ? "bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white shadow-xs"
+                : "text-[#526574] dark:text-[#cbd5e1] hover:text-[#071B2B] dark:hover:text-white"
             }`}
           >
             <List size={15} />

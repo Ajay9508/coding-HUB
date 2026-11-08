@@ -38,54 +38,54 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center auth-shell bg-[#FFFBF5] px-6 py-12">
+    <div className="flex min-h-screen items-center justify-center auth-shell bg-[#EEEEEE] dark:bg-[#071B2B] px-6 py-12">
       <form
         onSubmit={handleSubmit}
-        className="auth-card w-full max-w-md rounded-3xl border border-[#E9E2D8] bg-white p-8 sm:p-10 shadow-sm"
+        className="auth-card w-full max-w-md rounded-3xl border border-[#B9E4E8] bg-white dark:bg-[#0c2133] dark:border-[#167D8D]/40 p-8 sm:p-10 shadow-sm"
       >
         <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF0BE] text-[#171717]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white">
             <LogIn size={20} />
           </div>
-          <span className="text-xs font-bold text-[#FF8E3C] uppercase tracking-wider">
+          <span className="text-xs font-bold text-[#167D8D] dark:text-[#B9E4E8] uppercase tracking-wider">
             Secure Authentication
           </span>
         </div>
 
-        <h1 className="text-3xl font-black text-[#171717]">Welcome back</h1>
-        <p className="mt-1 text-xs text-[#5F5F5F]">
+        <h1 className="text-3xl font-black text-[#071B2B] dark:text-[#EEEEEE]">Welcome back</h1>
+        <p className="mt-1 text-xs text-[#526574] dark:text-[#B9E4E8]/80">
           Sign in to access your coding profiles, contest schedule & IDE.
         </p>
 
         {error && (
-          <div className="mt-5 flex items-center gap-2 rounded-xl bg-[#FFE2DE] p-3 text-xs font-bold text-[#F35F67]">
-            <AlertCircle size={16} className="shrink-0" />
+          <div className="mt-5 flex items-center gap-2 rounded-xl bg-[#B9E4E8]/40 border border-[#167D8D] p-3 text-xs font-bold text-[#071B2B] dark:text-[#EEEEEE]">
+            <AlertCircle size={16} className="shrink-0 text-[#167D8D]" />
             <span>{error}</span>
           </div>
         )}
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#171717] mb-1">Email address</label>
+            <label className="block text-xs font-bold text-[#071B2B] dark:text-[#EEEEEE] mb-1">Email address</label>
             <input
               type="email"
               placeholder="you@example.com"
               value={email}
               required
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-2xl border border-[#E9E2D8] bg-[#FFFBF5] px-4 py-3 text-xs text-[#171717] outline-none focus:border-[#FFD05A]"
+              className="w-full rounded-2xl border border-[#B9E4E8] bg-[#EEEEEE] dark:bg-[#071B2B] dark:text-[#EEEEEE] dark:border-[#167D8D]/40 px-4 py-3 text-xs text-[#071B2B] outline-none focus:border-[#167D8D]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#171717] mb-1">Password</label>
+            <label className="block text-xs font-bold text-[#071B2B] dark:text-[#EEEEEE] mb-1">Password</label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               required
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-2xl border border-[#E9E2D8] bg-[#FFFBF5] px-4 py-3 text-xs text-[#171717] outline-none focus:border-[#FFD05A]"
+              className="w-full rounded-2xl border border-[#B9E4E8] bg-[#EEEEEE] dark:bg-[#071B2B] dark:text-[#EEEEEE] dark:border-[#167D8D]/40 px-4 py-3 text-xs text-[#071B2B] outline-none focus:border-[#167D8D]"
             />
           </div>
         </div>
@@ -96,9 +96,9 @@ const Login = () => {
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-xs text-[#5F5F5F]">
+        <p className="mt-6 text-center text-xs text-[#526574] dark:text-[#cbd5e1]">
           Don't have an account?{" "}
-          <Link to="/register" className="font-bold text-[#FF8E3C] hover:underline">
+          <Link to="/register" className="font-bold text-[#167D8D] dark:text-[#B9E4E8] hover:underline">
             Register now
           </Link>
         </p>

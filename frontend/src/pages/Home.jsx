@@ -1,36 +1,26 @@
-import Navbar from
-  "../components/organisms/Navbar";
+import Navbar from "../components/organisms/Navbar";
+import Hero from "../components/organisms/Hero";
+import PlatformSection from "../components/organisms/PlatformSection";
 
-import Hero from
-  "../components/organisms/Hero";
-
-import PlatformSection from
-  "../components/organisms/PlatformSection";
-// import Sidebar from "../components/organisms/Sidebar";
 const Home = () => {
   return (
-    <div className="min-h-screen bg-[#FFFBF5]">
-        <Navbar />
-        {/* <Sidebar/> */}
+    <div className="min-h-screen bg-[#EEEEEE] dark:bg-[#071B2B]">
+      <Navbar />
       <Hero />
       <PlatformSection />
 
-      <section className="mx-auto max-w-7xl  px-6 py-16">
-        <div className="rounded-3xl  bg-[#171717] p-10  text-white   ">
-          <p className="  text-[rgb(255,208,90)] font-semibold">
+      <section className="mx-auto max-w-7xl px-6 py-16">
+        <div className="rounded-3xl bg-[#071B2B] p-10 text-[#EEEEEE] border border-[#167D8D]/40 shadow-xl">
+          <p className="text-[#B9E4E8] font-bold tracking-wider uppercase text-xs">
             CODING HUB
           </p>
 
-          <h2 className="mt-3 text-3xl font-black">
-            Your coding journey,
-            all in one place.
+          <h2 className="mt-3 text-3xl font-black text-white">
+            Your coding journey, all in one place.
           </h2>
 
-          <p className=" mt-4 max-w-2xl text-gray-300">
-            Connect your coding profiles,
-            track solved problems,
-            compare performance and
-            never miss a contest.
+          <p className="mt-4 max-w-2xl text-[#cbd5e1] leading-relaxed">
+            Connect your coding profiles, track solved problems, compare performance and never miss a contest across 30 top global platforms.
           </p>
         </div>
       </section>

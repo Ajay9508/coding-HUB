@@ -84,7 +84,7 @@ const Hero = () => {
       particle.style.height = `${size}px`;
 
       // Use palette colors for particles
-      const colors = ["#FFD05A", "#FFA057", "#FF7378", "#FFFBF5"];
+      const colors = ["#D96868", "#F2F2F2", "#91AE6E", "#689D4B"];
       particle.style.backgroundColor =
         colors[Math.floor(Math.random() * colors.length)];
       particle.style.opacity = "0";
@@ -140,7 +140,7 @@ const Hero = () => {
         <div>
           <div
             ref={badgeRef}
-            className="mb-5 inline-flex rounded-full bg-[#FFE2DE] px-4 py-2 text-sm font-semibold text-[#F35F67]"
+            className="mb-5 inline-flex rounded-full bg-[#E5ECE2] px-4 py-2 text-sm font-bold text-[#4A6E33] dark:bg-[#1E2B1E] dark:text-[#91AE6E] border border-[#91AE6E]/40 shadow-xs"
             style={{ opacity: 0 }}
           >
             The Developer's Command Center
@@ -148,7 +148,7 @@ const Hero = () => {
 
           <h1
             ref={headingRef}
-            className="text-5xl font-black leading-tight md:text-6xl"
+            className="text-5xl font-black leading-tight md:text-6xl text-[#1A241A] dark:text-[#F2F2F2]"
             style={{ visibility: "hidden" }}
           >
             All Coding Platforms. One Destination.
@@ -156,7 +156,7 @@ const Hero = () => {
 
           <p
             ref={subtitleRef}
-            className="mt-6 max-w-xl text-lg leading-8 text-[#5F5F5F]"
+            className="mt-6 max-w-xl text-lg leading-8 text-[#4A584A] dark:text-[#D2DDD0]"
             style={{ opacity: 0 }}
           >
             Track your coding progress, ratings, contests and profiles from
@@ -169,7 +169,7 @@ const Hero = () => {
             style={{ opacity: 0 }}
           >
             <Link to="/platforms">
-              <Button>Explore 20+ Platforms</Button>
+              <Button variant="primary">Explore 30+ Platforms</Button>
             </Link>
 
             <Link to="/contests">
@@ -184,7 +184,7 @@ const Hero = () => {
 
         <div
           ref={visualRef}
-          className="hero-visual relative overflow-hidden rounded-[2rem] bg-[#FFF0BE] p-10"
+          className="hero-visual relative overflow-hidden rounded-[2rem] bg-[#E5ECE2] dark:bg-[#1D261D] p-10 border-2 border-[#91AE6E]/40 dark:border-[#2E3D2E]"
           style={{ opacity: 0 }}
         >
           {/* Particle container */}
@@ -196,7 +196,7 @@ const Hero = () => {
           <div className="flex min-h-[320px] items-center justify-center">
             <div
               ref={iconRef}
-              className="text-[120px] font-black text-[#FFA057]"
+              className="text-[120px] font-black text-[#689D4B] dark:text-[#91AE6E]"
             >
               {"</>"}
             </div>
