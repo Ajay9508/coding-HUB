@@ -36,12 +36,14 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Brand Header */}
         <div className="flex items-center justify-between pb-6">
           <NavLink to="/" className="flex items-center gap-3 group" onClick={onClose}>
-            <div className="flex h-11 w-13 items-center justify-center rounded-2xl bg-red-400 shadow-sm transition-transform group-hover:scale-105">
+            <div className="flex h-11 w-13 items-center justify-center rounded-2xl bg-[#689D4B] shadow-xs transition-transform group-hover:scale-105">
               <span className="text-lg font-black text-white">{"</>"}</span>
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-[#171717]">Coding <samp className="text-[#ff3c3c]">Hub</samp></h1>
-              <p className="text-[11px] font-medium text-[#7A7A7A]">
+              <h1 className="text-xl font-black tracking-tight text-[#1A241A] dark:text-[#F2F2F2]">
+                Coding <span className="text-[#D96868]">Hub</span>
+              </h1>
+              <p className="text-[11px] font-medium text-[#4A584A] dark:text-[#8C9D8A]">
                 All Coding Platforms. One Destination.
               </p>
             </div>
@@ -51,7 +53,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               type="button"
               onClick={onClose}
               aria-label="Close menu"
-              className="rounded-xl p-1.5 text-[#5F5F5F] hover:bg-[#FFF0DA] lg:hidden"
+              className="rounded-xl p-1.5 text-[#4A584A] hover:bg-[#E5ECE2] dark:hover:bg-[#222E22] lg:hidden"
             >
               <X size={20} />
             </button>
@@ -73,13 +75,13 @@ const Sidebar = ({ isOpen, onClose }) => {
                 onClick={onClose}
                 className={`flex items-center gap-3.5 rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
                   isActive
-                    ? "bg-[#FFF0BE] text-[#171717] shadow-xs"
-                    : "text-[#5F5F5F] hover:bg-[#FFF4E5] hover:text-[#171717]"
+                    ? "bg-[#689D4B] text-white font-bold shadow-xs"
+                    : "text-[#4A584A] hover:bg-[#E5ECE2] hover:text-[#1A241A] dark:text-[#D2DDD0] dark:hover:bg-[#222E22] dark:hover:text-white"
                 }`}
               >
                 <Icon
                   size={19}
-                  className={isActive ? "text-[#171717]" : "text-[#5F5F5F]"}
+                  className={isActive ? "text-white" : "text-[#689D4B] dark:text-[#91AE6E]"}
                   strokeWidth={isActive ? 2.3 : 2}
                 />
                 <span>{item.name}</span>
@@ -89,30 +91,30 @@ const Sidebar = ({ isOpen, onClose }) => {
         </nav>
       </div>
 
-      {/* Bottom Promo Card */}
-      <div className="mt-6 rounded-3xl border border-[#F2ECE4] bg-white p-5 text-center shadow-xs">
-        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-b from-[#FFF2E0] to-[#FFE2CC] p-3 shadow-inner">
+      {/* Bottom Promo Card - Solid flat, no linear gradient */}
+      <div className="mt-6 rounded-3xl border border-[#D6E0D2] bg-white p-5 text-center shadow-xs dark:border-[#2E3D2E] dark:bg-[#1D261D]">
+        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-[#E5ECE2] p-3 shadow-inner dark:bg-[#141A14]">
           <div className="relative flex flex-col items-center">
             {/* Monitor graphic */}
-            <div className="flex h-12 w-16 items-center justify-center rounded-lg border-2 border-[#FFA057] bg-white shadow-xs">
-              <span className="text-xs font-black text-[#FF8E3C]">
+            <div className="flex h-12 w-16 items-center justify-center rounded-lg border-2 border-[#689D4B] bg-white shadow-xs dark:bg-[#1D261D]">
+              <span className="text-xs font-black text-[#D96868]">
                 {location.pathname.startsWith("/contests") ? "🏆" : "</>"}
               </span>
             </div>
-            <div className="h-1.5 w-6 bg-[#FFA057] rounded-b-sm"></div>
-            <div className="h-1 w-10 bg-[#FFD05A] rounded-full mt-0.5"></div>
+            <div className="h-1.5 w-6 bg-[#689D4B] rounded-b-sm"></div>
+            <div className="h-1 w-10 bg-[#91AE6E] rounded-full mt-0.5"></div>
             {/* Stars */}
-            <span className="absolute -top-1 -right-2 text-[10px] text-[#FFA057]">✦</span>
-            <span className="absolute -bottom-1 -left-2 text-[8px] text-[#FFD05A]">✦</span>
+            <span className="absolute -top-1 -right-2 text-[10px] text-[#D96868]">✦</span>
+            <span className="absolute -bottom-1 -left-2 text-[8px] text-[#91AE6E]">✦</span>
           </div>
         </div>
 
-        <h2 className="mt-3 text-xs font-black tracking-wide text-[#171717]">
+        <h2 className="mt-3 text-xs font-black tracking-wide text-[#1A241A] dark:text-[#F2F2F2]">
           {location.pathname.startsWith("/contests")
             ? "Compete • Improve • Grow"
             : "Build • Learn • Grow"}
         </h2>
-        <p className="mt-1 text-[11px] leading-relaxed text-[#7A7A7A]">
+        <p className="mt-1 text-[11px] leading-relaxed text-[#4A584A] dark:text-[#8C9D8A]">
           {location.pathname.startsWith("/contests")
             ? "Every contest is a step closer to your goals."
             : "Your coding journey, all in one place."}

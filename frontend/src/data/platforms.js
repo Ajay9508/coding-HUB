@@ -119,6 +119,66 @@ export const platforms = [
     description: "Online judge with thousands of problems, contests, and academic integration.",
     tags: [{ label: "Problems", variant: "blue" }, { label: "Academic", variant: "purple" }, { label: "Contests", variant: "pink" }], logoType: "beecrowd",
   },
+  {
+    id: "kaggle", name: "Kaggle", subtitle: "Data Science & Python Competitions",
+    category: "Math & Logic", categories: ["Math & Logic", "Practice"], icon: "KG",
+    description: "World's largest data science, machine learning, and algorithmic modeling competition community.",
+    tags: [{ label: "Data Science", variant: "blue" }, { label: "Python", variant: "mint" }, { label: "Competitions", variant: "orange" }], logoType: "kaggle",
+  },
+  {
+    id: "codesignal", name: "CodeSignal", subtitle: "Interview Practice & Skill Assessments",
+    category: "Interview Prep", categories: ["Interview Prep", "Practice"], icon: "CS",
+    description: "Industry-standard General Coding Assessment (GCA) tasks, Arcade challenges, and technical prep.",
+    tags: [{ label: "Assessments", variant: "purple" }, { label: "Arcade", variant: "blue" }, { label: "Interviews", variant: "pink" }], logoType: "codesignal",
+  },
+  {
+    id: "codingame", name: "CodinGame", subtitle: "Gamified Coding Challenges",
+    category: "Learning", categories: ["Learning", "Practice"], icon: "CG",
+    description: "Improve programming skills by playing online games, solving puzzles, and coding AI bots.",
+    tags: [{ label: "Gamified", variant: "orange" }, { label: "AI Battles", variant: "pink" }, { label: "Puzzles", variant: "mint" }], logoType: "codingame",
+  },
+  {
+    id: "interviewbit", name: "InterviewBit", subtitle: "Structured Placement Prep",
+    category: "Interview Prep", categories: ["Interview Prep", "Learning"], icon: "IB",
+    description: "Time-tested roadmap of DSA problems, company-specific test papers, and coding mock interviews.",
+    tags: [{ label: "Company Tracks", variant: "purple" }, { label: "Placement", variant: "blue" }, { label: "Mock Tests", variant: "mint" }], logoType: "interviewbit",
+  },
+  {
+    id: "algoexpert", name: "AlgoExpert", subtitle: "Technical Interview Mastery",
+    category: "Interview Prep", categories: ["Interview Prep", "Learning"], icon: "AE",
+    description: "Curated questions covering algorithms, data structures, and systems design interview fundamentals.",
+    tags: [{ label: "Systems Design", variant: "blue" }, { label: "Video Explanations", variant: "orange" }, { label: "Curated", variant: "purple" }], logoType: "algoexpert",
+  },
+  {
+    id: "freecodecamp", name: "freeCodeCamp", subtitle: "Open Source Learning Platform",
+    category: "Learning", categories: ["Learning", "Practice"], icon: "FC",
+    description: "Interactive coding curriculum covering JavaScript, algorithms, data structures, and backend systems.",
+    tags: [{ label: "Certifications", variant: "mint" }, { label: "Open Source", variant: "blue" }, { label: "Free", variant: "orange" }], logoType: "freecodecamp",
+  },
+  {
+    id: "lintcode", name: "LintCode", subtitle: "Algorithm Problem Archive",
+    category: "Interview Prep", categories: ["Interview Prep", "Practice"], icon: "LC",
+    description: "Comprehensive problem ladder covering standard and high-frequency Silicon Valley technical questions.",
+    tags: [{ label: "Ladder", variant: "purple" }, { label: "Big Tech", variant: "pink" }, { label: "System Design", variant: "blue" }], logoType: "lintcode",
+  },
+  {
+    id: "binarysearch", name: "BinarySearch", subtitle: "Real-time Collaborative Coding",
+    category: "Practice", categories: ["Practice", "Competitive Programming"], icon: "BS",
+    description: "Live competitive problem rooms, multi-coder speed challenges, and interactive peer problem discussions.",
+    tags: [{ label: "Multiplayer", variant: "orange" }, { label: "Live Rooms", variant: "mint" }, { label: "Speed", variant: "pink" }], logoType: "binarysearch",
+  },
+  {
+    id: "edx", name: "edX / MITx", subtitle: "University Computer Science",
+    category: "Learning", categories: ["Learning", "Math & Logic"], icon: "ED",
+    description: "Rigorous computer science, discrete math, and algorithmic engineering tracks from MIT and Harvard.",
+    tags: [{ label: "University", variant: "purple" }, { label: "Computer Science", variant: "blue" }, { label: "Foundations", variant: "mint" }], logoType: "edx",
+  },
+  {
+    id: "coursera", name: "Coursera", subtitle: "Specialized Algorithm Specializations",
+    category: "Learning", categories: ["Learning", "Practice"], icon: "CO",
+    description: "In-depth Stanford & Princeton algorithms courses, data structures mastery, and certificates.",
+    tags: [{ label: "Stanford", variant: "pink" }, { label: "Princeton", variant: "orange" }, { label: "Specialization", variant: "blue" }], logoType: "coursera",
+  },
 ];
 
 export default platforms;
