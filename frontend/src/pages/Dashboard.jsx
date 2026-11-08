@@ -120,42 +120,42 @@ const Dashboard = () => {
   return (
     <AppLayout>
       {/* ─── Top Profile & Welcome Header ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-[#B9E4E8] bg-gradient-to-r from-[#B9E4E8]/60 via-[#EEEEEE] to-[#B9E4E8]/60 dark:from-[#071B2B] dark:via-[#0c2438] dark:to-[#167D8D] p-6 sm:p-8 shadow-xs mb-8 dark:border-[#167D8D]/40">
+      <div className="relative overflow-hidden rounded-3xl border border-[#FED7B2] bg-gradient-to-r from-[#FFF4E6] via-[#FEEBD9] to-[#FEDBC0] p-6 sm:p-8 shadow-xs mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4 sm:gap-6">
             {/* User Avatar Badge */}
-            <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-3xl bg-[#167D8D] text-2xl sm:text-3xl font-black text-white shadow-sm border-2 border-white/80 dark:border-[#B9E4E8]/50">
+            <div className="relative flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-b from-[#FFE8B2] to-[#FFD05A] text-2xl sm:text-3xl font-black text-[#171717] shadow-sm border-2 border-white/80">
               {(user?.name || "D").slice(0, 2).toUpperCase()}
-              <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#B9E4E8] text-[#071B2B] text-[10px] ring-2 ring-white dark:ring-[#071B2B]">
+              <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#16A34A] text-white text-[10px] ring-2 ring-white">
                 <Check size={12} strokeWidth={3} />
               </span>
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="rounded-full bg-[#B9E4E8] px-3 py-0.5 text-xs font-black text-[#071B2B] dark:bg-[#167D8D] dark:text-[#EEEEEE]">
+                <span className="rounded-full bg-[#FFE2DE] px-3 py-0.5 text-xs font-black text-[#F35F67]">
                   DEVELOPER PROFILE
                 </span>
-                <span className="rounded-full bg-[#167D8D] px-2.5 py-0.5 text-[11px] font-bold text-white">
+                <span className="rounded-full bg-[#E8F8EE] px-2.5 py-0.5 text-[11px] font-bold text-[#16A34A]">
                   Active Member
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-black text-[#071B2B] dark:text-[#EEEEEE] tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-[#171717] tracking-tight">
                   {user?.name || dashboard?.user?.name}
                 </h1>
                 <button
                   type="button"
                   onClick={() => setIsEditingName(!isEditingName)}
-                  className="rounded-lg p-1 text-[#526574] dark:text-[#B9E4E8] hover:bg-white/60 dark:hover:bg-[#167D8D]/30 transition"
+                  className="rounded-lg p-1 text-[#7A7A7A] hover:bg-white/60 transition"
                   title="Edit profile name"
                 >
                   <Edit3 size={15} />
                 </button>
               </div>
 
-              <p className="text-xs sm:text-sm text-[#526574] dark:text-[#cbd5e1]">
+              <p className="text-xs sm:text-sm text-[#5F5F5F]">
                 {user?.email} · Member since {memberSince}
               </p>
             </div>
@@ -167,7 +167,7 @@ const Dashboard = () => {
               type="button"
               onClick={handleSyncAll}
               disabled={syncing}
-              className="flex items-center gap-2 rounded-2xl bg-[#B9E4E8] px-5 py-3 text-xs sm:text-sm font-bold text-[#071B2B] hover:bg-[#a0dce2] transition shadow-xs disabled:opacity-60"
+              className="flex items-center gap-2 rounded-2xl bg-[#FFD05A] px-5 py-3 text-xs sm:text-sm font-bold text-[#171717] hover:bg-[#FFA057] transition shadow-xs disabled:opacity-60"
             >
               <RefreshCw className={syncing ? "animate-spin" : ""} size={16} />
               {syncing ? "Syncing..." : "Sync Stats"}
@@ -175,7 +175,7 @@ const Dashboard = () => {
 
             <Link
               to="/platforms"
-              className="flex items-center gap-2 rounded-2xl bg-[#167D8D] px-5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-[#11626F] transition shadow-xs"
+              className="flex items-center gap-2 rounded-2xl bg-[#171717] px-5 py-3 text-xs sm:text-sm font-bold text-white hover:bg-black transition shadow-xs"
             >
               <Plus size={16} />
               Connect Platform
@@ -266,7 +266,7 @@ const Dashboard = () => {
               <Code2 size={36} className="mx-auto text-[#FFA057]" />
               <h3 className="mt-4 text-base font-bold text-[#171717]">No platforms connected yet</h3>
               <p className="mt-1 text-xs text-[#7A7A7A] max-w-sm mx-auto">
-                Connect your LeetCode, Codeforces, HackerRank, CodeChef, or GeeksforGeeks profiles to see unified
+                Connect your LeetCode, Codeforces, HackerRank, or CodeChef profiles to see unified
                 metrics and ratings.
               </p>
               <Link

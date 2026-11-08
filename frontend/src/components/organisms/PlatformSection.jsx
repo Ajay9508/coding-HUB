@@ -10,15 +10,15 @@ const PlatformSection = () => {
     <section className="mx-auto max-w-7xl px-6 py-12">
       <div className="mb-8 flex items-end justify-between">
         <div>
-          <p className="font-bold text-xs uppercase tracking-wider text-[#167D8D] dark:text-[#B9E4E8]">EXPLORE</p>
-          <h2 className="mt-2 text-3xl font-black text-[#071B2B] dark:text-[#EEEEEE]">Top Coding Platforms</h2>
+          <p className="font-semibold text-[#F35F67]">EXPLORE</p>
+          <h2 className="mt-2 text-3xl font-black text-[#171717]">Top Coding Platforms</h2>
         </div>
 
         <Link
           to="/platforms"
-          className="font-bold text-sm text-[#167D8D] hover:text-[#11626F] dark:text-[#B9E4E8] dark:hover:text-white transition flex items-center gap-1"
+          className="font-semibold text-[#F35F67] hover:text-[#FF7378] transition flex items-center gap-1"
         >
-          View all 30 platforms →
+          View all →
         </Link>
       </div>
 

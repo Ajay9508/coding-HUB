@@ -9,33 +9,33 @@ const Navbar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-[#D6E0D2] bg-[#F2F2F2]/95 backdrop-blur dark:bg-[#141A14]/95 dark:border-[#2E3D2E]">
+    <nav className="sticky top-0 z-50 border-b border-[#E9E2D8] bg-[#FFFBF5]/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Logo />
 
         {/* Nav Links with Icons */}
-        <div className="hidden items-center gap-6 lg:flex text-sm font-semibold text-[#4A584A] dark:text-[#D2DDD0]">
-          <Link to="/platforms" className="flex items-center gap-1.5 hover:text-[#689D4B] dark:hover:text-[#91AE6E] transition">
+        <div className="hidden items-center gap-6 lg:flex text-sm font-semibold text-[#5F5F5F]">
+          <Link to="/platforms" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <LayoutGrid size={16} />
             Platforms
           </Link>
 
-          <Link to="/contests" className="flex items-center gap-1.5 hover:text-[#689D4B] dark:hover:text-[#91AE6E] transition">
+          <Link to="/contests" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <Trophy size={16} />
             Contests
           </Link>
 
-          <Link to="/ide" className="flex items-center gap-1.5 hover:text-[#689D4B] dark:hover:text-[#91AE6E] transition">
+          <Link to="/ide" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <Code2 size={16} />
             IDE
           </Link>
 
-          <Link to="/roadmaps" className="flex items-center gap-1.5 hover:text-[#689D4B] dark:hover:text-[#91AE6E] transition">
+          <Link to="/roadmaps" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <Map size={16} />
             Roadmaps
           </Link>
 
-          <Link to="/resources" className="flex items-center gap-1.5 hover:text-[#689D4B] dark:hover:text-[#91AE6E] transition">
+          <Link to="/resources" className="flex items-center gap-1.5 hover:text-[#FF7378] transition">
             <BookOpen size={16} />
             Resources
           </Link>
@@ -45,7 +45,7 @@ const Navbar = () => {
         <div className="flex items-center gap-3">
           <Link
             to="/platforms"
-            className="rounded-xl border border-[#D6E0D2] bg-white p-3 text-[#1A241A] hover:bg-[#E5ECE2] dark:bg-[#1D261D] dark:text-[#F2F2F2] dark:border-[#2E3D2E] transition"
+            className="rounded-xl border border-[#E9E2D8] bg-white p-3 text-[#171717] hover:bg-[#FFF0DA] transition"
             aria-label="Search platforms"
           >
             <Search size={18} />
@@ -63,14 +63,9 @@ const Navbar = () => {
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/login">
-                <Button variant="secondary">Login</Button>
-              </Link>
-              <Link to="/register">
-                <Button>Register</Button>
-              </Link>
-            </div>
+            <Link to="/login">
+              <Button>Login</Button>
+            </Link>
           )}
         </div>
       </div>

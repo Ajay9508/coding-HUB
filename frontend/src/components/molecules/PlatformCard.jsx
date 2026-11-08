@@ -134,66 +134,6 @@ export const PlatformLogo = ({ type }) => {
           🐝
         </div>
       );
-    case "kaggle":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#20BEFF] font-black text-white text-xs shadow-xs">
-          k
-        </div>
-      );
-    case "codesignal":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2F4462] font-black text-[#58D8AC] text-xs shadow-xs">
-          {"</>"}
-        </div>
-      );
-    case "codingame":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#F3B007] font-black text-[#1C1F26] text-xs shadow-xs">
-          🎮
-        </div>
-      );
-    case "interviewbit":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2B6CB0] font-black text-white text-xs shadow-xs">
-          IB
-        </div>
-      );
-    case "algoexpert":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#002B5B] font-black text-[#62B6CB] text-xs shadow-xs">
-          AE
-        </div>
-      );
-    case "freecodecamp":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0A0A23] font-black text-white text-xs shadow-xs">
-          (🔥)
-        </div>
-      );
-    case "lintcode":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0088CC] font-black text-white text-xs shadow-xs">
-          LC
-        </div>
-      );
-    case "binarysearch":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#00A86B] font-black text-white text-xs shadow-xs">
-          01
-        </div>
-      );
-    case "edx":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#B7261E] font-black text-white text-xs shadow-xs">
-          edX
-        </div>
-      );
-    case "coursera":
-      return (
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#0056D2] font-black text-white text-xs shadow-xs">
-          C
-        </div>
-      );
     default:
       return (
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FFF0BE] font-bold text-[#FF8E3C] text-xs">
@@ -204,39 +144,39 @@ export const PlatformLogo = ({ type }) => {
 };
 
 const tagStyles = {
-  pink: "bg-[#FCE8E8] text-[#D96868] dark:bg-[#2D1E1E] dark:text-[#D96868] font-semibold border border-[#F2B5B5] dark:border-[#4A2828]",
-  blue: "bg-[#E5ECE2] text-[#4A6E33] dark:bg-[#1E2B1E] dark:text-[#91AE6E] font-semibold border border-[#C5D5BF] dark:border-[#2E3D2E]",
-  mint: "bg-[#689D4B]/15 text-[#689D4B] dark:bg-[#689D4B]/25 dark:text-[#91AE6E] font-semibold border border-[#689D4B]/30",
-  purple: "bg-[#F2F2F2] text-[#1A241A] dark:bg-[#141A14] dark:text-[#F2F2F2] font-semibold border border-[#D6E0D2] dark:border-[#2E3D2E]",
-  orange: "bg-[#689D4B] text-white font-semibold",
+  pink: "bg-[#FFE9E9] text-[#F35F67]",
+  blue: "bg-[#EBF5FF] text-[#2563EB]",
+  mint: "bg-[#E8F8F0] text-[#0D9488]",
+  purple: "bg-[#F5EEFF] text-[#9333EA]",
+  orange: "bg-[#FFF2E5] text-[#EA580C]",
 };
 
 const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
   return (
-    <article className="flex flex-col justify-between rounded-3xl border border-[#D6E0D2] bg-white p-6 shadow-xs hover:shadow-md transition-all dark:bg-[#1D261D] dark:border-[#2E3D2E]">
+    <article className="flex flex-col justify-between rounded-3xl border border-[#E9E2D8] bg-white p-6 shadow-xs hover:shadow-md transition-all">
       {/* Top Header */}
       <div>
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6E0D2] bg-[#F2F2F2] dark:bg-[#141A14] dark:border-[#2E3D2E] shadow-xs">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#F2ECE4] bg-[#FFFBF5] shadow-xs">
               <PlatformLogo type={platform.logoType} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-[#1A241A] dark:text-[#F2F2F2]">{platform.name}</h3>
-              <p className="text-xs text-[#6E7E6E] dark:text-[#8C9D8A] mt-0.5">{platform.subtitle}</p>
+              <h3 className="text-xl font-black text-[#171717]">{platform.name}</h3>
+              <p className="text-xs text-[#7A7A7A] mt-0.5">{platform.subtitle}</p>
             </div>
           </div>
 
           {/* Connection Status Badge */}
           <div>
             {platform.isConnected ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EBF3E7] px-3 py-1 text-xs font-bold text-[#689D4B] dark:bg-[#1C271C] dark:text-[#91AE6E]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#689D4B]" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F8EE] px-3 py-1 text-xs font-bold text-[#16A34A]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A]" />
                 Connected
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F2F2F2] px-3 py-1 text-xs font-semibold text-[#6E7E6E] dark:bg-[#141A14] dark:text-[#8C9D8A] border border-[#D6E0D2] dark:border-[#2E3D2E]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#6E7E6E]" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3F4F6] px-3 py-1 text-xs font-semibold text-[#6B7280]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#9CA3AF]" />
                 Not Connected
               </span>
             )}
@@ -244,7 +184,7 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
         </div>
 
         {/* Description */}
-        <p className="mt-3 text-xs leading-relaxed text-[#4A584A] dark:text-[#D2DDD0] line-clamp-2">
+        <p className="mt-3 text-xs leading-relaxed text-[#5F5F5F] line-clamp-2">
           {platform.description}
         </p>
 
@@ -264,10 +204,10 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
       </div>
 
       {/* Bottom Section */}
-      <div className="mt-6 border-t border-[#D6E0D2] dark:border-[#2E3D2E] pt-5">
-        <div className="pb-5 text-xs text-[#4A584A] dark:text-[#D2DDD0]">
+      <div className="mt-6 border-t border-[#F2ECE4] pt-5">
+        <div className="pb-5 text-xs text-[#7A7A7A]">
           {platform.isConnected
-            ? <><p>Connected account: <span className="font-semibold text-[#1A241A] dark:text-[#F2F2F2]">@{platform.handle}</span></p><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#F2F2F2] dark:bg-[#141A14] p-3 border border-[#D6E0D2] dark:border-[#2E3D2E]"><span className="block text-[10px]">Solved</span><strong className="mt-1 block text-base text-[#1A241A] dark:text-[#F2F2F2]">{platform.solved ?? "—"}</strong></div><div className="rounded-xl bg-[#F2F2F2] dark:bg-[#141A14] p-3 border border-[#D6E0D2] dark:border-[#2E3D2E]"><span className="block text-[10px]">Rating</span><strong className="mt-1 block text-base text-[#1A241A] dark:text-[#F2F2F2]">{platform.rating ?? "—"}</strong></div></div><p className={`mt-2 ${platform.syncStatus === "error" ? "text-[#D96868]" : "text-[#6E7E6E] dark:text-[#8C9D8A]"}`}>{platform.syncError || (platform.lastSyncedAt ? `Last synced ${new Date(platform.lastSyncedAt).toLocaleString()}` : platform.syncStatus === "unavailable" ? "Automatic stats sync is unavailable" : "Stats have not synced yet")}</p></>
+            ? <><p>Connected account: <span className="font-semibold text-[#171717]">@{platform.handle}</span></p><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#FFFBF5] p-3"><span className="block text-[10px]">Solved</span><strong className="mt-1 block text-base text-[#171717]">{platform.solved ?? "—"}</strong></div><div className="rounded-xl bg-[#FFFBF5] p-3"><span className="block text-[10px]">Rating</span><strong className="mt-1 block text-base text-[#171717]">{platform.rating ?? "—"}</strong></div></div><p className={`mt-2 ${platform.syncStatus === "error" ? "text-[#B42318]" : "text-[#7A7A7A]"}`}>{platform.syncError || (platform.lastSyncedAt ? `Last synced ${new Date(platform.lastSyncedAt).toLocaleString()}` : platform.syncStatus === "unavailable" ? "Automatic stats sync is unavailable" : "Stats have not synced yet")}</p></>
             : "Connect your handle to link this platform to your account."}
         </div>
 
@@ -276,7 +216,7 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
           <button
             type="button"
             onClick={() => onManage && onManage(platform)}
-            className="inline-flex items-center gap-1 text-xs font-bold text-[#1A241A] dark:text-[#F2F2F2] hover:text-[#689D4B] transition"
+            className="inline-flex items-center gap-1 text-xs font-bold text-[#171717] hover:text-[#FF8E3C] transition"
           >
             View Details
             <ArrowRight size={14} />
@@ -284,11 +224,11 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
 
           {platform.isConnected ? (
             <>
-            <button type="button" onClick={() => onSync?.(platform.id)} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-xl border border-[#D6E0D2] bg-white px-3 py-2 text-xs font-bold text-[#1A241A] hover:bg-[#E5ECE2] dark:bg-[#141A14] dark:text-[#F2F2F2] dark:border-[#2E3D2E] disabled:opacity-60" aria-label={`Sync ${platform.name} stats`}><RefreshCw className={syncing ? "animate-spin" : ""} size={14} />Sync</button>
+            <button type="button" onClick={() => onSync?.(platform.id)} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-xl border border-[#E9E2D8] bg-white px-3 py-2 text-xs font-bold text-[#171717] hover:bg-[#FFF8EE] disabled:opacity-60" aria-label={`Sync ${platform.name} stats`}><RefreshCw className={syncing ? "animate-spin" : ""} size={14} />Sync</button>
             <button
               type="button"
               onClick={() => onManage && onManage(platform)}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[#689D4B] bg-[#E5ECE2] px-4 py-2 text-xs font-bold text-[#1A241A] hover:bg-[#91AE6E]/30 dark:bg-[#222E22] dark:text-[#F2F2F2] dark:border-[#689D4B] transition shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#FFD05A] bg-[#FFFBF0] px-4 py-2 text-xs font-bold text-[#171717] hover:bg-[#FFEEC2] transition shadow-xs"
             >
               <Settings2 size={14} />
               Manage
@@ -298,7 +238,7 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
             <button
               type="button"
               onClick={() => onConnect && onConnect(platform)}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#689D4B] px-4 py-2 text-xs font-bold text-white hover:bg-[#58863F] transition shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#171717] px-4 py-2 text-xs font-bold text-white hover:bg-black transition shadow-xs"
             >
               <Link2 size={14} />
               Connect

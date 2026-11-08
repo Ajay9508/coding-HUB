@@ -416,12 +416,12 @@ const CodeIDE = () => {
   }, []);
 
   /* ─── Theming ─── */
-  const editorBg = darkEditor ? "#071B2B" : "#FFFFFF";
-  const editorText = darkEditor ? "#EEEEEE" : "#071B2B";
-  const gutterBg = darkEditor ? "#05131F" : "#EEEEEE";
-  const gutterText = darkEditor ? "#167D8D" : "#526574";
-  const outputBg = darkEditor ? "#05131F" : "#EEEEEE";
-  const outputText = darkEditor ? "#EEEEEE" : "#071B2B";
+  const editorBg = darkEditor ? "#1E1E2E" : "#FFFFFF";
+  const editorText = darkEditor ? "#CDD6F4" : "#171717";
+  const gutterBg = darkEditor ? "#181825" : "#F5F0E8";
+  const gutterText = darkEditor ? "#585B70" : "#A8A29E";
+  const outputBg = darkEditor ? "#11111B" : "#FFFBF5";
+  const outputText = darkEditor ? "#CDD6F4" : "#171717";
 
   /* ─── Line Numbers ─── */
   const lines = code.split("\n");
@@ -429,26 +429,26 @@ const CodeIDE = () => {
   const content = (
     <div className={`flex flex-col ${fullscreen ? "h-screen" : "h-[calc(100vh-8rem)]"} min-h-[500px]`} ref={containerRef}>
       {/* ─── Top Toolbar ─── */}
-      <div className="flex flex-wrap items-center gap-2 rounded-t-2xl border border-[#B9E4E8] dark:border-[#167D8D]/40 bg-white dark:bg-[#0c2133] px-3 py-2 shadow-xs">
+      <div className="flex flex-wrap items-center gap-2 rounded-t-2xl border border-[#E9E2D8] bg-white px-3 py-2 shadow-xs">
         {/* Language Selector */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setLangDropdownOpen((o) => !o)}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#B9E4E8] dark:border-[#167D8D]/40 bg-[#EEEEEE] dark:bg-[#071B2B] px-3 py-2 text-xs font-semibold text-[#071B2B] dark:text-[#EEEEEE] hover:bg-[#B9E4E8]/40 transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-3 py-2 text-xs font-semibold text-[#171717] hover:bg-[#FFF0BE] transition"
           >
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: meta.color }} />
             {meta.label}
             <ChevronDown size={14} />
           </button>
           {langDropdownOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 w-44 rounded-xl border border-[#B9E4E8] dark:border-[#167D8D]/40 bg-white dark:bg-[#0c2133] py-1 shadow-lg">
+            <div className="absolute left-0 top-full z-30 mt-1 w-44 rounded-xl border border-[#E9E2D8] bg-white py-1 shadow-lg">
               {Object.entries(LANGUAGE_META).map(([key, val]) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => handleLanguageChange(key)}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition hover:bg-[#B9E4E8]/40 dark:hover:bg-[#167D8D]/30 ${language === key ? "bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white font-bold" : "text-[#526574] dark:text-[#cbd5e1]"}`}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-xs font-medium transition hover:bg-[#FFF0BE] ${language === key ? "bg-[#FFF0BE] font-bold" : "text-[#5F5F5F]"}`}
                 >
                   <span className="h-2 w-2 rounded-full" style={{ background: val.color }} />
                   {val.label}
@@ -459,39 +459,39 @@ const CodeIDE = () => {
         </div>
 
         {/* File Name */}
-        <div className="flex items-center gap-1 rounded-xl border border-[#B9E4E8] dark:border-[#167D8D]/40 bg-[#EEEEEE] dark:bg-[#071B2B] px-2 py-1.5">
-          <FileCode2 size={14} className="text-[#526574] dark:text-[#B9E4E8]" />
+        <div className="flex items-center gap-1 rounded-xl border border-[#E9E2D8] bg-[#FFFBF5] px-2 py-1.5">
+          <FileCode2 size={14} className="text-[#5F5F5F]" />
           <input
             type="text"
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
-            className="w-24 bg-transparent text-xs font-medium text-[#071B2B] dark:text-[#EEEEEE] outline-none"
+            className="w-24 bg-transparent text-xs font-medium text-[#171717] outline-none"
             placeholder="filename"
           />
-          <span className="text-xs text-[#526574] dark:text-[#B9E4E8]">{meta.ext}</span>
+          <span className="text-xs text-[#5F5F5F]">{meta.ext}</span>
         </div>
 
-        <div className="mx-1 h-5 w-px bg-[#B9E4E8] dark:bg-[#167D8D]/40" />
+        <div className="mx-1 h-5 w-px bg-[#E9E2D8]" />
 
         {/* Run Button */}
         <button
           type="button"
           onClick={runCode}
           disabled={isRunning}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[#167D8D] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#11626F] disabled:opacity-60 shadow-xs"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#22C55E] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#16A34A] disabled:opacity-60 shadow-xs"
         >
           <Play size={14} fill="white" />
           {isRunning ? "Running…" : "Run"}
         </button>
 
         {/* Save */}
-        <button type="button" onClick={saveCode} className="inline-flex items-center gap-1.5 rounded-xl border border-[#B9E4E8] dark:border-[#167D8D]/40 bg-white dark:bg-[#071B2B] px-3 py-2 text-xs font-semibold text-[#071B2B] dark:text-[#EEEEEE] hover:bg-[#B9E4E8]/40 transition" title="Save (Ctrl+S)">
+        <button type="button" onClick={saveCode} className="inline-flex items-center gap-1.5 rounded-xl border border-[#E9E2D8] bg-white px-3 py-2 text-xs font-semibold text-[#171717] hover:bg-[#FFF0BE] transition" title="Save (Ctrl+S)">
           <Save size={14} />
           Save
         </button>
 
         {/* Reset */}
-        <button type="button" onClick={resetCode} className="inline-flex items-center gap-1.5 rounded-xl border border-[#B9E4E8] dark:border-[#167D8D]/40 bg-white dark:bg-[#071B2B] px-3 py-2 text-xs font-semibold text-[#526574] dark:text-[#cbd5e1] hover:bg-[#B9E4E8]/40 transition" title="Reset code">
+        <button type="button" onClick={resetCode} className="inline-flex items-center gap-1.5 rounded-xl border border-[#E9E2D8] bg-white px-3 py-2 text-xs font-semibold text-[#5F5F5F] hover:bg-[#FFF0BE] transition" title="Reset code">
           <RotateCcw size={14} />
         </button>
 
@@ -499,33 +499,33 @@ const CodeIDE = () => {
 
         {/* Font Size */}
         <div className="hidden items-center gap-1 sm:flex">
-          <button type="button" onClick={() => setFontSize((s) => Math.max(10, s - 1))} className="rounded-lg p-1 text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40 transition"><Minus size={14} /></button>
-          <span className="text-xs font-semibold text-[#526574] dark:text-[#EEEEEE] w-6 text-center">{fontSize}</span>
-          <button type="button" onClick={() => setFontSize((s) => Math.min(24, s + 1))} className="rounded-lg p-1 text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40 transition"><Plus size={14} /></button>
+          <button type="button" onClick={() => setFontSize((s) => Math.max(10, s - 1))} className="rounded-lg p-1 text-[#5F5F5F] hover:bg-[#FFF0BE] transition"><Minus size={14} /></button>
+          <span className="text-xs font-semibold text-[#5F5F5F] w-6 text-center">{fontSize}</span>
+          <button type="button" onClick={() => setFontSize((s) => Math.min(24, s + 1))} className="rounded-lg p-1 text-[#5F5F5F] hover:bg-[#FFF0BE] transition"><Plus size={14} /></button>
         </div>
 
         {/* Word Wrap */}
-        <button type="button" onClick={() => setWordWrap((w) => !w)} className={`rounded-xl p-2 transition ${wordWrap ? "bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white" : "text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40"}`} title="Toggle word wrap">
+        <button type="button" onClick={() => setWordWrap((w) => !w)} className={`rounded-xl p-2 transition ${wordWrap ? "bg-[#FFF0BE] text-[#171717]" : "text-[#5F5F5F] hover:bg-[#FFF0BE]"}`} title="Toggle word wrap">
           <WrapText size={14} />
         </button>
 
         {/* Theme Toggle */}
-        <button type="button" onClick={() => setDarkEditor((d) => !d)} className="rounded-xl p-2 text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40 transition" title="Toggle editor theme">
+        <button type="button" onClick={() => setDarkEditor((d) => !d)} className="rounded-xl p-2 text-[#5F5F5F] hover:bg-[#FFF0BE] transition" title="Toggle editor theme">
           {darkEditor ? <Sun size={14} /> : <Moon size={14} />}
         </button>
 
         {/* Snippets */}
-        <button type="button" onClick={() => { setShowSnippets((s) => !s); setShowShortcuts(false); }} className={`rounded-xl p-2 transition ${showSnippets ? "bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white" : "text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40"}`} title="Code snippets">
+        <button type="button" onClick={() => { setShowSnippets((s) => !s); setShowShortcuts(false); }} className={`rounded-xl p-2 transition ${showSnippets ? "bg-[#FFF0BE] text-[#171717]" : "text-[#5F5F5F] hover:bg-[#FFF0BE]"}`} title="Code snippets">
           <BookOpen size={14} />
         </button>
 
         {/* Shortcuts */}
-        <button type="button" onClick={() => { setShowShortcuts((s) => !s); setShowSnippets(false); }} className={`rounded-xl p-2 transition ${showShortcuts ? "bg-[#B9E4E8] text-[#071B2B] dark:bg-[#167D8D] dark:text-white" : "text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40"}`} title="Keyboard shortcuts">
+        <button type="button" onClick={() => { setShowShortcuts((s) => !s); setShowSnippets(false); }} className={`rounded-xl p-2 transition ${showShortcuts ? "bg-[#FFF0BE] text-[#171717]" : "text-[#5F5F5F] hover:bg-[#FFF0BE]"}`} title="Keyboard shortcuts">
           <Keyboard size={14} />
         </button>
 
         {/* Fullscreen */}
-        <button type="button" onClick={toggleFullscreen} className="rounded-xl p-2 text-[#526574] dark:text-[#B9E4E8] hover:bg-[#B9E4E8]/40 transition" title="Toggle fullscreen">
+        <button type="button" onClick={toggleFullscreen} className="rounded-xl p-2 text-[#5F5F5F] hover:bg-[#FFF0BE] transition" title="Toggle fullscreen">
           {fullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
         </button>
       </div>
