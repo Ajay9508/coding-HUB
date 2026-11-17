@@ -1,10 +1,13 @@
 import { Router } from "express";
-import { randomUUID } from "node:crypto";
-import { createUser, findUserByEmail } from "../services/store.js";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { createUser, findUserByEmail, resetPasswordWithToken, setPasswordResetToken } from "../services/store.js";
 import { createToken, hashPassword, safeUser, verifyPassword, } from "../services/authService.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { problem, rejectUnknownFields, requireObjectBody, } from "../middleware/problem.js";
 import { rateLimit } from "../middleware/rateLimit.js";
+import { validateBody } from "../middleware/validate.js";
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from "../schemas/apiSchemas.js";
+import { sendPasswordResetEmail } from "../services/mail.js";
 const router = Router();
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const authLimit = rateLimit({
@@ -12,7 +15,7 @@ const authLimit = rateLimit({
     limit: Number(process.env.AUTH_RATE_LIMIT) || 20,
     windowMs: Number(process.env.AUTH_RATE_WINDOW_MS) || 15 * 60 * 1000,
 });
-router.post("/register", authLimit, async (req, res) => {
+router.post("/register", authLimit, validateBody(registerSchema), async (req, res) => {
     const body = requireObjectBody(req.body);
     rejectUnknownFields(body, ["name", "email", "password"]);
     const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
@@ -46,6 +49,7 @@ router.post("/register", authLimit, async (req, res) => {
         id: randomUUID(),
         name,
         email,
+        role: "USER",
         passwordHash: await hashPassword(password),
         createdAt: new Date().toISOString(),
     };
@@ -62,7 +66,7 @@ router.post("/register", authLimit, async (req, res) => {
         .status(201)
         .json({ success: true, user: safeUser(user), token: createToken(user.id) });
 });
-router.post("/login", authLimit, async (req, res) => {
+router.post("/login", authLimit, validateBody(loginSchema), async (req, res) => {
     const body = requireObjectBody(req.body);
     rejectUnknownFields(body, ["email", "password"]);
     const email = typeof req.body?.email === "string"
@@ -74,6 +78,24 @@ router.post("/login", authLimit, async (req, res) => {
         throw problem(401, "Incorrect email or password.", {
             code: "invalid_credentials",
         });
+    router.post("/forgot-password", authLimit, validateBody(forgotPasswordSchema), async (req, res) => {
+        const email = req.body.email.trim().toLowerCase();
+        const user = await findUserByEmail(email);
+        if (user) {
+            const token = randomBytes(32).toString("hex");
+            const tokenHash = createHash("sha256").update(token).digest("hex");
+            await setPasswordResetToken(email, tokenHash, new Date(Date.now() + 15 * 60 * 1000));
+            await sendPasswordResetEmail(email, token);
+        }
+        res.json({ success: true, message: "If an account exists for that email, a reset link has been sent." });
+    });
+    router.post("/reset-password", authLimit, validateBody(resetPasswordSchema), async (req, res) => {
+        const tokenHash = createHash("sha256").update(req.body.token).digest("hex");
+        const user = await resetPasswordWithToken(tokenHash, await hashPassword(req.body.password));
+        if (!user)
+            throw problem(400, "This password reset link is invalid or expired.", { code: "invalid_reset_token" });
+        res.json({ success: true, message: "Password reset successfully. You can now sign in." });
+    });
     res.json({
         success: true,
         user: safeUser(user),

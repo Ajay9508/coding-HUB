@@ -136,6 +136,24 @@ test("API contract, ownership, conditional requests, and idempotent contest crea
   assert.equal(currentAccount.status, 200);
   assert.equal("passwordHash" in (await currentAccount.json()).user, false);
 
+  const graphql = await fetch(`${base.replace("/api/v1", "")}/graphql`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: "{ users { email role } contests { title } discussions { title } }" }),
+  });
+  assert.equal(graphql.status, 200);
+  const graphqlBody = await graphql.json();
+  assert.equal(graphqlBody.errors, undefined);
+  assert.equal(graphqlBody.data.users[0].role, "USER");
+
+  await User.updateOne({ _id: user.id }, { $set: { role: "ADMIN" } });
+  const adminToken = createToken(user.id);
+  const adminHealth = await fetch(`${base}/admin/health`, {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  assert.equal(adminHealth.status, 200);
+  await User.updateOne({ _id: user.id }, { $set: { role: "USER" } });
+
   const duplicate = await fetch(`${base}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -439,6 +457,18 @@ test("upstream request retries transient failures and does not retry client erro
     { status: 502 },
   );
   assert.equal(attempts, 1);
+
+  await assert.rejects(
+    requestJson("https://timeout.provider.example/timeout", {
+      fetcher: async (_url, options) => {
+        assert.ok(options.signal instanceof AbortSignal);
+        const error = new Error("timed out");
+        error.name = "TimeoutError";
+        throw error;
+      },
+    }),
+    { status: 504, code: "upstream_timeout" },
+  );
 
   await assert.rejects(
     requestJson("https://provider.example/data", {

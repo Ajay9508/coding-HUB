@@ -148,8 +148,8 @@ const Hero = () => {
 
           <h1
             ref={headingRef}
-            className="text-5xl font-black leading-tight md:text-6xl text-[#1A241A] dark:text-[#F2F2F2]"
-            style={{ visibility: "hidden" }}
+            className="text-4xl font-black leading-[1.05] tracking-tight text-[#1A241A] md:text-6xl dark:text-[#F2F2F2]"
+            style={{ opacity: 0 }}
           >
             All Coding Platforms. One Destination.
           </h1>

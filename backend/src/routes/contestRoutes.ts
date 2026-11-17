@@ -36,7 +36,7 @@ router.get("/reminders", authMiddleware, async (req, res) =>
 );
 router.get("/", cachePublic(30), async (req, res) => {
   const query = req.query as Record<string, any>;
-  const allowedQuery = ["page", "limit", "platform", "status", "search"];
+  const allowedQuery = ["page", "limit", "cursor", "platform", "status", "search"];
   const unknown = Object.keys(query).filter(
     (key) => !allowedQuery.includes(key),
   );
@@ -61,6 +61,16 @@ router.get("/", cachePublic(30), async (req, res) => {
   };
   const page = parsePositive(query.page, 1, 1000000);
   const limit = parsePositive(query.limit, 20, 100);
+  let cursor: { startAt: string; id: string } | undefined;
+  if (query.cursor !== undefined) {
+    try {
+      const decoded = JSON.parse(Buffer.from(String(query.cursor), "base64url").toString("utf8"));
+      if (typeof decoded.startAt !== "string" || typeof decoded.id !== "string") throw new Error("invalid");
+      cursor = decoded;
+    } catch {
+      throw problem(422, "cursor must be a valid pagination cursor.", { code: "invalid_cursor" });
+    }
+  }
   if (
     query.status &&
     !["live", "upcoming", "completed"].includes(query.status)
@@ -72,6 +82,12 @@ router.get("/", cachePublic(30), async (req, res) => {
   if (query.platform) filter.platform = new RegExp(`^${String(query.platform).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
   if (query.status) filter.status = query.status;
   if (query.search) filter.title = new RegExp(String(query.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  if (cursor) {
+    filter.$or = [
+      { startAt: { $gt: cursor.startAt } },
+      { startAt: cursor.startAt, _id: { $gt: cursor.id } },
+    ];
+  }
   let docs: any[] = [];
   let total = 0;
   let live = 0;
@@ -80,7 +96,7 @@ router.get("/", cachePublic(30), async (req, res) => {
 
   try {
     const [d, t, l, s, w] = await Promise.all([
-      Contest.find(filter).sort({ startAt: 1 }).skip((page - 1) * limit).limit(limit).lean(),
+      Contest.find(filter).sort({ startAt: 1, _id: 1 }).skip(cursor ? 0 : (page - 1) * limit).limit(limit + 1).lean(),
       Contest.countDocuments(filter),
       Contest.countDocuments({ status: "live" }),
       Contest.countDocuments({ status: "upcoming", startAt: { $gte: new Date().toISOString(), $lte: new Date(Date.now() + 86400000).toISOString() } }),
@@ -95,7 +111,9 @@ router.get("/", cachePublic(30), async (req, res) => {
     console.warn("Contest query failed:", err);
   }
 
-  const all = docs.map((doc) => {
+  const hasNext = cursor ? docs.length > limit : docs.length > limit;
+  const pageDocs = docs.slice(0, limit);
+  const all = pageDocs.map((doc) => {
     if (doc._id) {
       const { _id, ...item } = doc;
       return { ...item, id: _id };
@@ -110,6 +128,21 @@ router.get("/", cachePublic(30), async (req, res) => {
       limit,
       total,
       pages: Math.ceil(total / limit),
+      ...(hasNext && pageDocs.length
+        ? {
+            nextCursor: Buffer.from(JSON.stringify({
+              startAt: pageDocs[pageDocs.length - 1].startAt,
+              id: pageDocs[pageDocs.length - 1].id,
+            })).toString("base64url"),
+            next: `${req.baseUrl}${req.path}?${new URLSearchParams({
+              ...Object.fromEntries(Object.entries(query).filter(([key]) => key !== "page" && key !== "cursor")),
+              cursor: Buffer.from(JSON.stringify({
+                startAt: pageDocs[pageDocs.length - 1].startAt,
+                id: pageDocs[pageDocs.length - 1].id,
+              })).toString("base64url"),
+            }).toString()}`,
+          }
+        : {}),
     },
     summary: {
       live,

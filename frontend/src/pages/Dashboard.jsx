@@ -35,9 +35,17 @@ const Dashboard = () => {
       setError("");
     } catch (requestError) {
       setDashboard(null);
+      if (requestError.response?.status === 401) {
+        window.localStorage.removeItem("coding-hub-token");
+        window.localStorage.removeItem("coding-hub-user");
+        window.location.assign("/login");
+        return;
+      }
       setError(
         requestError.response?.data?.detail ||
-          "Could not load your dashboard. Check that the API is running.",
+          (requestError.response
+            ? `Dashboard request failed (${requestError.response.status}).`
+            : "The API is unavailable. Start the backend on port 5000 and try again."),
       );
     } finally {
       setLoading(false);

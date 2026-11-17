@@ -81,7 +81,9 @@ const Platforms = () => {
       setPlatforms(fallbackList);
       setLoadError(
         requestError.response?.data?.detail ||
-          "Could not load connected platforms from the API.",
+          (requestError.request && !requestError.response
+            ? "The API is unavailable. Showing the local platform catalog; start the backend with `npm run dev` to load connected profiles."
+            : "Could not load the platform catalog from the API."),
       );
     } finally {
       setLoading(false);

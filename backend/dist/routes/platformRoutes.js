@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUserProfiles, platforms, setUserProfiles, Profile, } from "../services/store.js";
+import { getUserProfiles, platforms, setUserProfiles, } from "../services/store.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { syncPlatformProfile } from "../services/platformSync.js";
 import { problem, rejectUnknownFields, requireObjectBody, } from "../middleware/problem.js";
@@ -8,6 +8,12 @@ import { cachePublic, conditionalJson } from "../middleware/conditionalGet.js";
 const router = Router();
 router.get("/", cachePublic(300), (req, res) => conditionalJson(req, res, { success: true, platforms }));
 router.get("/connected", authMiddleware, async (req, res) => res.json({ success: true, platforms: await getUserProfiles(req.user.id) }));
+router.get("/:platformId", cachePublic(300), (req, res) => {
+    const platform = platforms.find(({ id }) => id === req.params.platformId);
+    if (!platform)
+        throw problem(404, "Platform not found.", { code: "platform_not_found" });
+    conditionalJson(req, res, { success: true, platform });
+});
 router.put("/:platformId", authMiddleware, async (req, res) => {
     const platform = platforms.find(({ id }) => id === req.params.platformId);
     if (!platform)
@@ -76,10 +82,9 @@ router.post("/:platformId/sync", authMiddleware, rateLimit({
 router.delete("/:platformId", authMiddleware, async (req, res) => {
     if (!platforms.some(({ id }) => id === req.params.platformId))
         throw problem(404, "Platform not found.", { code: "platform_not_found" });
-    await Profile.deleteOne({
-        userId: req.user.id,
-        platformId: req.params.platformId,
-    });
+    const profiles = await getUserProfiles(req.user.id);
+    const remaining = profiles.filter((profile) => profile.platformId !== req.params.platformId);
+    await setUserProfiles(req.user.id, remaining);
     res.status(204).end();
 });
 export default router;

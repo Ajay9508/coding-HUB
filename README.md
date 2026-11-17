@@ -7,13 +7,15 @@ CodingHub brings public competitive-programming and interview-practice profiles,
 - React 19 + Vite responsive frontend.
 - Express 5 REST API under `/api/v1`.
 - Registration/login with scrypt password hashes and signed bearer tokens.
-- Per-user coding profile connections; live statistic sync for Codeforces and LeetCode.
+- Per-user coding profile connections; live statistic sync for Codeforces, LeetCode, CodeChef, HackerRank, and GeeksforGeeks.
 - Contest search/filter/pagination, contest ownership, and reminders.
 - Per-user dashboard and public leaderboard based on synced stats (unknown stats remain `null`).
 - Problem Details errors, request IDs, CORS allowlist, Helmet, input-size limit, conditional GET, idempotency for contest creation, and rate limits.
+- Ajv request-body schemas, JSON/XML content negotiation, cursor pagination (`nextCursor`/`next`), structured request logs, and self-hosted Swagger UI at `/api-docs`.
+- GraphQL at `/graphql`, optional PostgreSQL parameterized API audit logging, a provider circuit breaker, and an isolated SOAP calculator integration at `/api/v1/integrations/soap/calculator/add`.
 - MongoDB persistence through typed Mongoose models, with durable idempotency and rate-limit records.
 
-CodeChef, HackerRank, and AtCoder are visible in the catalog but do not currently have automatic stats sync. Contest feed data must be inserted into the API; no external contest feed is configured.
+The platform catalog exposes integration metadata and profile URL templates. Contest feed data must be inserted into the API; no external contest feed is configured.
 
 ## Architecture
 
@@ -47,7 +49,7 @@ if (!(Test-Path .env)) { Copy-Item .env.example .env }
 if (!(Test-Path .env.local)) { Copy-Item backend/.env.example .env.local }
 ```
 
-Set private local values in the ignored `.env`, `.env.local`, and `backend/.env` files. The root `.env` configures the Mongo container; `.env.local` supplies the direct `MONGODB_URI` for a backend running on your computer. Use the same Mongo username/password in both files. Start MongoDB, then the React and Express development servers:
+Set private local values in the ignored `.env`, `.env.local`, and `backend/.env` files. The root `.env` configures the Mongo container; `.env.local` supplies the direct `MONGODB_URI` for a backend running on your computer. For MongoDB Atlas, set `MONGODB_URI` in `.env.local` to the connection string copied from Atlas, for example `mongodb+srv://<username>:<password>@<cluster-host>/codinghub?retryWrites=true&w=majority`. URL-encode special characters in the username or password, and add the application's IP address to Atlas Network Access. Use the same Mongo username/password in both files. Start MongoDB, then the React and Express development servers:
 
 ```powershell
 docker compose up -d mongo
@@ -87,6 +89,9 @@ For a production build, run `npm.cmd run build` and `npm.cmd --prefix backend st
 | `PROFILE_SYNC_TIMEOUT_MS` | `12000` | Per-attempt outbound request timeout. |
 | `CODEFORCES_API_URL` | `https://codeforces.com/api` | Codeforces API base URL. |
 | `LEETCODE_GRAPHQL_URL` | `https://leetcode.com/graphql/` | LeetCode GraphQL endpoint. |
+| `DATABASE_URL` | unset | Optional PostgreSQL URL for parameterized API audit logging. |
+| `SOAP_WSDL_URL` | DneOnline calculator WSDL | WSDL used by the SOAP demonstration route. |
+| `SOAP_TIMEOUT_MS` | `10000` | SOAP client timeout. |
 
 For Docker Compose, copy `.env.example` to root `.env`; Compose constructs the API's Mongo URI with the `mongo` service hostname. The backend's `.env.example` shows the separate `localhost` URI for direct host execution. Secrets are ignored by Git.
 
@@ -99,13 +104,15 @@ All routes use `/api/v1`. Protected endpoints require `Authorization: Bearer <to
 | Health | `GET /health` |
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
 | Users | `GET /users/me`, `PATCH /users/me`, `DELETE /users/me` |
-| Platforms | `GET /platforms`, `GET /platforms/connected`, `PUT /platforms/:platformId`, `POST /platforms/:platformId/sync`, `DELETE /platforms/:platformId` |
+| Platforms | `GET /platforms`, `GET /platforms/:platformId`, `GET /platforms/connected`, `PUT /platforms/:platformId`, `POST /platforms/:platformId/sync`, `DELETE /platforms/:platformId` |
 | Dashboard | `GET /dashboard` |
 | Contests | `GET /contests`, `GET /contests/:contestId`, `POST /contests`, `PATCH /contests/:contestId`, `DELETE /contests/:contestId` |
 | Reminders | `GET /contests/reminders`, `PUT /contests/:contestId/reminder`, `DELETE /contests/:contestId/reminder` |
 | Leaderboard | `GET /leaderboard` |
+| GraphQL | `POST /graphql` |
+| SOAP demo | `POST /integrations/soap/calculator/add` |
 
-Contest lists accept `page`, `limit` (maximum 100), `platform`, `status`, and `search`. Contest creation accepts optional `Idempotency-Key` (24-hour replay window); reusing a key with another body returns `409`. Contest edits accept optional `If-Match`; stale tags return `412`. See [OpenAPI](docs/openapi.yaml) for schemas and response codes.
+Contest lists accept `page`, `limit` (maximum 100), optional opaque `cursor`, `platform`, `status`, and `search`. Cursor requests return `pagination.nextCursor` and `pagination.next`; page-based requests remain supported for frontend compatibility. Contest creation accepts optional `Idempotency-Key` (24-hour replay window); reusing a key with another body returns `409`. Contest edits accept optional `If-Match`; stale tags return `412`. Use `Accept: application/xml` for successful XML responses. See [OpenAPI](docs/openapi.yaml) for schemas and response codes; the same document is served through `/api-docs`.
 
 ### Main profile-sync flow
 
@@ -113,7 +120,7 @@ Contest lists accept `page`, `limit` (maximum 100), `platform`, `status`, and `s
 2. Call `POST /api/v1/platforms/:platformId/sync` with the same bearer token.
 3. Read updated data from `GET /api/v1/platforms/connected` or `GET /api/v1/dashboard`.
 
-The sync endpoint retries only transient provider failures, at most twice. Unknown handles and unsupported providers are reported without fabricated stats.
+The sync endpoint retries only transient provider failures, at most twice. Unknown handles and unsupported providers are reported without fabricated stats. `GET /api/v1/platforms/:platformId` returns `syncSupported` and a `profileUrl` template for each catalog entry.
 
 ## JSON data migration
 

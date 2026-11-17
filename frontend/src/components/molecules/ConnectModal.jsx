@@ -80,7 +80,9 @@ const ConnectModalInner = ({ onClose, initialPlatform, platforms, onSave }) => {
                 {currentPlatform?.isConnected ? "Manage Connection" : "Connect Platform"}
               </h3>
               <p className="text-xs text-[#526574] dark:text-[#B9E4E8]/80">
-                Link a public profile handle to your account
+                {currentPlatform?.syncSupported
+                  ? "Link a profile to synchronize live statistics"
+                  : "Link a public profile; live statistics are not configured yet"}
               </p>
             </div>
           </div>

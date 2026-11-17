@@ -2,7 +2,11 @@ import { createHmac, randomBytes, scrypt as scryptCallback, timingSafeEqual } fr
 import { promisify } from "node:util";
 
 const scrypt: (password: string, salt: string, keyLength: number) => Promise<Buffer> = promisify(scryptCallback) as any;
-const secret = process.env.JWT_SECRET || "e56949f25af3945efb3ae5b6a807a5256ef03bc580e9ab0c50460fbdce25545e";
+const secret = process.env.JWT_SECRET;
+if (!secret && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET must be configured in production.");
+}
+const signingSecret = secret || "development-only-codinghub-secret";
 
 export const hashPassword = async (password: string) => {
   const salt = randomBytes(16).toString("hex");
@@ -19,7 +23,7 @@ export const verifyPassword = async (password: string, stored: string) => {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 };
 
-const sign = (value: string) => createHmac("sha256", secret).update(value).digest("base64url");
+const sign = (value: string) => createHmac("sha256", signingSecret).update(value).digest("base64url");
 
 export const createToken = (userId: string) => {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
@@ -62,6 +66,6 @@ export const verifyToken = async (token: string) => {
 export const publicUser = (user: any) => {
   if (!user) return null;
   const { _id, id, passwordHash: _passwordHash, ...rest } = user;
-  return { id: id ?? _id, ...rest };
+  return { id: id ?? _id, role: rest.role ?? "USER", ...rest };
 };
 export const safeUser = publicUser;

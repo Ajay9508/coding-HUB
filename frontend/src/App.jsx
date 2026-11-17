@@ -16,6 +16,8 @@ import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import Community from "./pages/Community";
 import Settings from "./pages/Settings";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { useAuth } from "./context/useAuth";
 
 const ProtectedRoute = ({ children }) => {
@@ -42,6 +44,8 @@ const App = () => {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/platforms" element={<Platforms />} />
       <Route path="/contests" element={<Contests />} />
       <Route path="/contests/local" element={<Navigate to="/contests?tab=local" replace />} />

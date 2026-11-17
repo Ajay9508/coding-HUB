@@ -1,7 +1,7 @@
 declare global {
   namespace Express {
     interface Request {
-      user: { id: string; name: string; email: string; createdAt: string };
+      user: { id: string; name: string; email: string; role: "USER" | "ADMIN"; createdAt: string };
       idempotencyContext?: {
         key: string;
         fingerprint: string;

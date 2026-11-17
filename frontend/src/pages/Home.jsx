@@ -4,14 +4,14 @@ import PlatformSection from "../components/organisms/PlatformSection";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-[#EEEEEE] dark:bg-[#071B2B]">
+    <div className="min-h-screen bg-[#F2F2F2] dark:bg-[#141A14]">
       <Navbar />
       <Hero />
       <PlatformSection />
 
       <section className="mx-auto max-w-7xl px-6 py-16">
-        <div className="rounded-3xl bg-[#071B2B] p-10 text-[#EEEEEE] border border-[#167D8D]/40 shadow-xl">
-          <p className="text-[#B9E4E8] font-bold tracking-wider uppercase text-xs">
+        <div className="rounded-3xl border border-[#2E3D2E] bg-[#1A241A] p-8 text-[#F2F2F2] shadow-xl sm:p-10">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#91AE6E]">
             CODING HUB
           </p>
 
@@ -19,7 +19,7 @@ const Home = () => {
             Your coding journey, all in one place.
           </h2>
 
-          <p className="mt-4 max-w-2xl text-[#cbd5e1] leading-relaxed">
+          <p className="mt-4 max-w-2xl leading-relaxed text-[#D2DDD0]">
             Connect your coding profiles, track solved problems, compare performance and never miss a contest across 30 top global platforms.
           </p>
         </div>

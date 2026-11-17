@@ -135,6 +135,26 @@ paths:
       responses:
         '204': { description: Account deleted. }
         '401': { $ref: '#/components/responses/Problem' }
+  /users/me/password:
+    patch:
+      tags: [Users]
+      summary: Reset the authenticated user's password
+      operationId: resetCurrentUserPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, minLength: 1, maxLength: 256 }
+                newPassword: { type: string, minLength: 8, maxLength: 256 }
+      responses:
+        '200': { description: Password updated successfully. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /platforms:
     get:
       tags: [Platforms]
@@ -172,6 +192,20 @@ paths:
   /platforms/{platformId}:
     parameters:
       - $ref: '#/components/parameters/PlatformId'
+    get:
+      tags: [Platforms]
+      summary: Read one platform catalog entry
+      operationId: getPlatform
+      security: []
+      responses:
+        '200':
+          description: Public platform details; supports ETag and If-None-Match.
+          content:
+            application/json:
+              schema: { type: object, required: [success, platform], properties: { success: { type: boolean, const: true }, platform: { $ref: '#/components/schemas/Platform' } } }
+        '304': { description: Platform details have not changed. }
+        '404': { $ref: '#/components/responses/Problem' }
+        '406': { $ref: '#/components/responses/Problem' }
     put:
       tags: [Platforms]
       summary: Connect or replace a platform handle
@@ -209,7 +243,7 @@ paths:
       tags: [Platforms]
       summary: Refresh a connected profile snapshot
       operationId: syncPlatformProfile
-      description: Codeforces and LeetCode adapters are implemented. Other catalog providers return 501. Transient upstream failures are retried at most twice.
+      description: Codeforces, LeetCode, CodeChef, HackerRank, and GeeksforGeeks adapters are implemented. Other catalog providers return 501. Transient upstream failures are retried at most twice.
       responses:
         '200': { description: Synced profile, content: { application/json: { schema: { type: object, properties: { success: { type: boolean }, platform: { $ref: '#/components/schemas/ConnectedProfile' } } } } } }
         '401': { $ref: '#/components/responses/Problem' }
@@ -240,6 +274,10 @@ paths:
       parameters:
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - name: cursor
+          in: query
+          description: Opaque cursor returned by the previous page; when supplied, cursor pagination is used.
+          schema: { type: string }
         - { name: platform, in: query, schema: { type: string } }
         - { name: status, in: query, schema: { type: string, enum: [live, upcoming, completed] } }
         - { name: search, in: query, schema: { type: string } }
@@ -383,6 +421,28 @@ paths:
               schema: { $ref: '#/components/schemas/LeaderboardResponse' }
         '304': { description: Leaderboard has not changed. }
         '406': { $ref: '#/components/responses/Problem' }
+  /integrations/soap/calculator/add:
+    post:
+      tags: [Integrations]
+      operationId: soapCalculatorAdd
+      summary: Call the configured calculator SOAP operation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [intA, intB]
+              properties:
+                intA: { type: integer }
+                intB: { type: integer }
+      responses:
+        '200': { description: SOAP result returned. }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -435,12 +495,14 @@ components:
         token: { type: string }
     Platform:
       type: object
-      required: [id, name, category, description]
+      required: [id, name, category, description, syncSupported]
       properties:
         id: { type: string }
         name: { type: string }
         category: { type: string }
         description: { type: string }
+        syncSupported: { type: boolean }
+        profileUrl: { type: [string, 'null'] }
     ConnectedProfile:
       type: object
       required: [platformId, name, handle, connectedAt]

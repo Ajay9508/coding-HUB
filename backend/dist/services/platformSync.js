@@ -1,3 +1,5 @@
+import { CircuitBreaker } from "./circuitBreaker.js";
+const providerBreakers = new Map();
 export const requestJson = async (url, options = {}) => {
     const fetcher = options.fetcher ?? fetch;
     const { fetcher: _fetcher, acceptProviderFailure = false, ...requestOptions } = options;
@@ -5,7 +7,13 @@ export const requestJson = async (url, options = {}) => {
     const maxRetries = 2;
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
         try {
-            const response = await fetcher(url, { ...requestOptions, signal: AbortSignal.timeout(timeoutMs), headers: { "user-agent": "CodingHub/1.0 profile-sync", ...requestOptions.headers } });
+            const host = new URL(url).host;
+            let breaker = providerBreakers.get(host);
+            if (!breaker) {
+                breaker = new CircuitBreaker(undefined, 3, 30_000);
+                providerBreakers.set(host, breaker);
+            }
+            const response = await breaker.execute(() => fetcher(url, { ...requestOptions, signal: AbortSignal.timeout(timeoutMs), headers: { "user-agent": "CodingHub/1.0 profile-sync", ...requestOptions.headers } }));
             if (response.ok)
                 return await response.json();
             if (acceptProviderFailure && response.status === 400) {
@@ -69,11 +77,147 @@ const syncLeetCode = async (handle) => {
     const contest = data.data?.userContestRanking;
     return { handle: user.username, rating: Number.isFinite(contest?.rating) ? Math.round(contest.rating) : null, maxRating: null, rank: contest?.globalRanking ?? user.profile?.ranking ?? null, solved: Number.isFinite(total) ? total : null, contests: contest?.attendedContestsCount ?? null };
 };
-const syncers = { codeforces: syncCodeforces, leetcode: syncLeetCode };
+const requestText = async (url) => {
+    for (let attempt = 0; attempt <= 2; attempt += 1) {
+        try {
+            const response = await fetch(url, {
+                signal: AbortSignal.timeout(Number(process.env.PROFILE_SYNC_TIMEOUT_MS) || 12000),
+                headers: {
+                    "user-agent": "CodingHub/1.0 profile-sync",
+                    accept: "text/html,application/xhtml+xml",
+                },
+            });
+            if (response.ok)
+                return response.text();
+            if (![429, 500, 502, 503, 504].includes(response.status) || attempt === 2) {
+                const status = response.status === 404 ? 422 : response.status >= 500 || response.status === 429 ? 503 : 502;
+                throw Object.assign(new Error(`Platform returned HTTP ${response.status}`), {
+                    status,
+                    expose: true,
+                    code: status === 422 ? "invalid_platform_handle" : "upstream_failure",
+                });
+            }
+        }
+        catch (error) {
+            if (error.status)
+                throw error;
+            if (attempt === 2) {
+                const timeout = error.name === "TimeoutError" || error.name === "AbortError";
+                throw Object.assign(new Error(timeout ? "The profile service timed out." : "The profile service is temporarily unavailable."), {
+                    status: timeout ? 504 : 503,
+                    expose: true,
+                    code: timeout ? "upstream_timeout" : "upstream_unavailable",
+                });
+            }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 200 * (2 ** attempt)));
+    }
+    throw Object.assign(new Error("The profile service is temporarily unavailable."), { status: 503, expose: true, code: "upstream_unavailable" });
+};
+const invalidProfile = (platform) => Object.assign(new Error(`${platform} username was not found.`), { status: 422, code: "invalid_platform_handle" });
+const syncCodeChef = async (handle) => {
+    const base = (process.env.CODECHEF_PROFILE_URL || "https://www.codechef.com/users").replace(/\/$/, "");
+    const html = await requestText(`${base}/${encodeURIComponent(handle)}`);
+    const username = html.match(/m-username--link[^>]*>\s*([^<]+)/i)?.[1]?.trim();
+    if (!username)
+        throw invalidProfile("CodeChef");
+    const rating = Number(html.match(/rating-number[^>]*>\s*([\d,]+)/i)?.[1]?.replace(",", ""));
+    const maxRating = Number(html.match(/highest-rating[^>]*>[\s\S]*?([\d,]+)/i)?.[1]?.replace(",", ""));
+    const rankMatches = [...html.matchAll(/rating-ranks[\s\S]*?<strong[^>]*>\s*([^<]+)/gi)].map((match) => match[1].trim());
+    const contests = (html.match(/var all_rating = (\[[\s\S]*?\]);/i)?.[1].match(/\{/g) || []).length;
+    const solved = Number(html.match(/Total Problems Solved[^<]*?(\d[\d,]*)/i)?.[1]?.replace(",", ""));
+    return {
+        handle: username,
+        rating: Number.isFinite(rating) ? rating : null,
+        maxRating: Number.isFinite(maxRating) ? maxRating : null,
+        rank: rankMatches[0] || null,
+        solved: Number.isFinite(solved) ? solved : null,
+        contests: contests || null,
+    };
+};
+const syncGeeksForGeeks = async (handle) => {
+    const profileUrl = new URL(process.env.GFG_PROFILE_URL || "https://authapi.geeksforgeeks.org/api-get/user-profile-info/");
+    profileUrl.search = new URLSearchParams({
+        handle,
+        article_count: "false",
+        redirect: "true",
+    }).toString();
+    const data = await requestJson(profileUrl.toString(), {
+        headers: { accept: "application/json" },
+    });
+    const user = data.data;
+    if (!user || typeof user !== "object")
+        throw invalidProfile("GeeksforGeeks");
+    const toNumberOrNull = (value) => {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : null;
+    };
+    return {
+        handle,
+        rating: toNumberOrNull(user.score),
+        maxRating: null,
+        rank: user.institute_rank ?? null,
+        solved: toNumberOrNull(user.total_problems_solved),
+        contests: null,
+    };
+};
+const syncHackerRank = async (handle) => {
+    const base = (process.env.HACKERRANK_BASE_URL || "https://www.hackerrank.com").replace(/\/$/, "");
+    const user = await requestJson(`${base}/rest/hackers/${encodeURIComponent(handle)}`);
+    if (!user.status || !user.model)
+        throw invalidProfile("HackerRank");
+    const tracks = await requestJson(`${base}/rest/hackers/${encodeURIComponent(handle)}/scores_elo`);
+    const scores = Array.isArray(tracks) ? tracks.map((track) => Number(track.practice?.score) || 0) : [];
+    return {
+        handle: user.model.username || handle,
+        rating: scores.length ? scores.reduce((total, score) => total + score, 0) : null,
+        maxRating: null,
+        rank: user.model.level ?? null,
+        solved: null,
+        contests: null,
+    };
+};
+const syncCodewars = async (handle) => {
+    const base = (process.env.CODEWARS_API_URL || "https://www.codewars.com/api/v1").replace(/\/$/, "");
+    const user = await requestJson(`${base}/users/${encodeURIComponent(handle)}`);
+    if (!user?.username)
+        throw invalidProfile("Codewars");
+    return {
+        handle: user.username,
+        rating: Number.isFinite(user.ranks?.overall?.score) ? user.ranks.overall.score : null,
+        maxRating: null,
+        rank: user.ranks?.overall?.name ?? null,
+        solved: Number.isFinite(user.codeChallenges?.totalCompleted) ? user.codeChallenges.totalCompleted : null,
+        contests: null,
+    };
+};
+const syncExercism = async (handle) => {
+    const base = (process.env.EXERCISM_API_URL || "https://exercism.org/api/v2").replace(/\/$/, "");
+    const user = await requestJson(`${base}/users/${encodeURIComponent(handle)}`);
+    if (!user?.handle)
+        throw invalidProfile("Exercism");
+    return {
+        handle: user.handle,
+        rating: null,
+        maxRating: null,
+        rank: user.reputation?.total ?? null,
+        solved: null,
+        contests: null,
+    };
+};
+const syncers = {
+    codeforces: syncCodeforces,
+    leetcode: syncLeetCode,
+    codechef: syncCodeChef,
+    geeksforgeeks: syncGeeksForGeeks,
+    hackerrank: syncHackerRank,
+    codewars: syncCodewars,
+    exercism: syncExercism,
+};
 export const syncPlatformProfile = async (platformId, handle) => {
     const sync = syncers[platformId];
     if (sync) {
         return sync(handle);
     }
-    throw Object.assign(new Error("Live statistics are currently available only for Codeforces and LeetCode."), { status: 501, code: "platform_sync_unavailable", expose: true });
+    throw Object.assign(new Error(`Live statistics integration is not configured for ${platformId}.`), { status: 501, expose: true, code: "platform_sync_unavailable" });
 };

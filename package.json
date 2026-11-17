@@ -12,6 +12,11 @@
     "start:web": "npm --prefix frontend run dev"
   },
   "dependencies": {
-    "mongoose": "^9.11.1"
+    "mongodb": "^7.8.0",
+    "mongoose": "^9.11.1",
+    "nodemailer": "^10.6.0"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.2"
   }
 }

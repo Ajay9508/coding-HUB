@@ -1,12 +1,16 @@
 import { Router } from "express";
-import { safeUser } from "../services/authService.js";
+import { hashPassword, safeUser, verifyPassword } from "../services/authService.js";
 import {
   Contest,
   IdempotencyRecord,
   Profile,
   Reminder,
   User,
+  findUserById,
+  updateUserPassword,
 } from "../services/store.js";
+import { validateBody } from "../middleware/validate.js";
+import { passwordPatchSchema, userPatchSchema } from "../schemas/apiSchemas.js";
 import {
   problem,
   rejectUnknownFields,
@@ -17,7 +21,7 @@ const router = Router();
 router.get("/me", (req, res) =>
   res.json({ success: true, user: safeUser(req.user) }),
 );
-router.patch("/me", async (req, res) => {
+router.patch("/me", validateBody(userPatchSchema), async (req, res) => {
   const body = requireObjectBody(req.body);
   rejectUnknownFields(body, ["name"]);
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
@@ -46,6 +50,23 @@ router.patch("/me", async (req, res) => {
   }
 
   res.json({ success: true, user: safeUser(user) });
+});
+router.patch("/me/password", validateBody(passwordPatchSchema), async (req, res) => {
+  const body = requireObjectBody(req.body);
+  rejectUnknownFields(body, ["currentPassword", "newPassword"]);
+  const currentPassword = req.body.currentPassword;
+  const newPassword = req.body.newPassword;
+  if (currentPassword === newPassword)
+    throw problem(422, "New password must be different from the current password.", {
+      code: "password_unchanged",
+    });
+
+  const user = await findUserById(req.user.id);
+  if (!user || !(await verifyPassword(currentPassword, user.passwordHash)))
+    throw problem(401, "Current password is incorrect.", { code: "invalid_current_password" });
+
+  await updateUserPassword(req.user.id, await hashPassword(newPassword));
+  res.json({ success: true, message: "Password updated successfully." });
 });
 router.delete("/me", async (req, res) => {
   try {

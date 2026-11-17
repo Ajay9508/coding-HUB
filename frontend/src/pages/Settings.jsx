@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Bell, Database, CheckCircle2, Save } from "lucide-react";
+import { Bell, Database, CheckCircle2, Save, ShieldCheck } from "lucide-react";
 import AppLayout from "../components/organisms/AppLayout";
+import api from "../api";
 
 const Settings = () => {
   const [contestAlerts, setContestAlerts] = useState(true);
@@ -8,11 +9,41 @@ const Settings = () => {
   const [autoSync, setAutoSync] = useState(true);
   const [defaultLanguage, setDefaultLanguage] = useState("javascript");
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const handleSave = (e) => {
     e.preventDefault();
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2500);
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    setPasswordMessage("");
+    setPasswordError("");
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    try {
+      setPasswordLoading(true);
+      const { data } = await api.patch("/users/me/password", { currentPassword, newPassword });
+      setPasswordMessage(data.message);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      setPasswordError(
+        error.response?.data?.detail || "Could not reset your password. Please try again.",
+      );
+    } finally {
+      setPasswordLoading(false);
+    }
   };
 
   return (
@@ -148,6 +179,29 @@ const Settings = () => {
               Save Preferences
             </button>
           </div>
+        </form>
+
+        <form onSubmit={handlePasswordReset} className="rounded-3xl border border-[#E9E2D8] bg-white p-6 sm:p-7 shadow-xs">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-[#F2ECE4]">
+            <ShieldCheck className="text-[#167D8D]" size={20} />
+            <div>
+              <h2 className="text-base font-black text-[#171717]">Reset Password</h2>
+              <p className="text-[11px] text-[#7A7A7A]">Update your password securely.</p>
+            </div>
+          </div>
+          {(passwordError || passwordMessage) && (
+            <p className={`mt-4 rounded-xl p-3 text-xs font-bold ${passwordError ? "bg-[#FFE2DE] text-[#B42318]" : "bg-[#E8F8EE] text-[#16A34A]"}`}>
+              {passwordError || passwordMessage}
+            </p>
+          )}
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <input type="password" required minLength={1} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Current password" className="rounded-2xl border border-[#E9E2D8] bg-[#FFFBF5] px-3.5 py-2.5 text-xs outline-none" />
+            <input type="password" required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password" className="rounded-2xl border border-[#E9E2D8] bg-[#FFFBF5] px-3.5 py-2.5 text-xs outline-none" />
+            <input type="password" required minLength={8} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="rounded-2xl border border-[#E9E2D8] bg-[#FFFBF5] px-3.5 py-2.5 text-xs outline-none" />
+          </div>
+          <button type="submit" disabled={passwordLoading} className="mt-4 rounded-2xl bg-[#167D8D] px-5 py-2.5 text-xs font-bold text-white disabled:opacity-60">
+            {passwordLoading ? "Resetting..." : "Reset Password"}
+          </button>
         </form>
       </div>
     </AppLayout>

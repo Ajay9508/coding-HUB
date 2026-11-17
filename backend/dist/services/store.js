@@ -40,17 +40,17 @@ function saveFallbackStore(data) {
     }
 }
 export const platforms = [
-    { id: "codeforces", name: "Codeforces", category: "Competitive Programming", description: "Competitive programming contests, practice problems, and community." },
-    { id: "leetcode", name: "LeetCode", category: "Interview Prep", description: "Coding interview practice, curated problems, and contests." },
-    { id: "codechef", name: "CodeChef", category: "Competitive Programming", description: "Programming practice and competitive coding contests." },
-    { id: "hackerrank", name: "HackerRank", category: "Practice", description: "Coding practice, interview preparation, and skill assessments." },
+    { id: "codeforces", name: "Codeforces", category: "Competitive Programming", description: "Competitive programming contests, practice problems, and community.", syncSupported: true, profileUrl: "https://codeforces.com/profile/{handle}" },
+    { id: "leetcode", name: "LeetCode", category: "Interview Prep", description: "Coding interview practice, curated problems, and contests.", syncSupported: true, profileUrl: "https://leetcode.com/{handle}/" },
+    { id: "codechef", name: "CodeChef", category: "Competitive Programming", description: "Programming practice and competitive coding contests.", syncSupported: true, profileUrl: "https://www.codechef.com/users/{handle}" },
+    { id: "hackerrank", name: "HackerRank", category: "Practice", description: "Coding practice, interview preparation, and skill assessments.", syncSupported: true, profileUrl: "https://www.hackerrank.com/profile/{handle}" },
     { id: "atcoder", name: "AtCoder", category: "Competitive Programming", description: "Programming contests and problems for all skill levels." },
     { id: "topcoder", name: "TopCoder", category: "Competitive Programming", description: "Algorithm contests, data science challenges, and development competitions." },
     { id: "spoj", name: "SPOJ", category: "Practice", description: "Massive archive of programming problems across many domains and difficulty levels." },
-    { id: "geeksforgeeks", name: "GeeksforGeeks", category: "Interview Prep", description: "Data structures, algorithms, interview preparation, and tutorials for all levels." },
+    { id: "geeksforgeeks", name: "GeeksforGeeks", category: "Interview Prep", description: "Data structures, algorithms, interview preparation, and tutorials for all levels.", syncSupported: true, profileUrl: "https://www.geeksforgeeks.org/user/{handle}/" },
     { id: "hackerearth", name: "HackerEarth", category: "Practice", description: "Programming challenges, hackathons, and hiring assessments for developers." },
-    { id: "codewars", name: "CodeWars", category: "Practice", description: "Improve skills through coding challenges called kata, ranked by difficulty." },
-    { id: "exercism", name: "Exercism", category: "Learning", description: "Free mentored code practice across 70+ languages with community mentorship." },
+    { id: "codewars", name: "CodeWars", category: "Practice", description: "Improve skills through coding challenges called kata, ranked by difficulty.", syncSupported: true, profileUrl: "https://www.codewars.com/users/{handle}" },
+    { id: "exercism", name: "Exercism", category: "Learning", description: "Free mentored code practice across 70+ languages with community mentorship.", syncSupported: true, profileUrl: "https://exercism.org/profiles/{handle}" },
     { id: "projecteuler", name: "Project Euler", category: "Math & Logic", description: "Challenging mathematical and computational problems requiring creative problem solving." },
     { id: "dmoj", name: "DMOJ", category: "Competitive Programming", description: "Open-source online judge with contests, problems, and editorial support." },
     { id: "kattis", name: "Kattis", category: "Competitive Programming", description: "Problem archive used by universities worldwide for competitive programming training." },
@@ -60,7 +60,21 @@ export const platforms = [
     { id: "toph", name: "Toph", category: "Competitive Programming", description: "Host and participate in programming contests with a clean, modern interface." },
     { id: "naukricode360", name: "Naukri Code360", category: "Interview Prep", description: "Curated coding problems, interview experiences, and guided learning paths for placements." },
     { id: "beecrowd", name: "beecrowd", category: "Practice", description: "Online judge with thousands of problems, contests, and academic integration." },
-];
+    { id: "kaggle", name: "Kaggle", category: "Math & Logic", description: "World's largest data science, machine learning, and algorithmic modeling competition community.", syncSupported: true, profileUrl: "https://www.kaggle.com/{handle}" },
+    { id: "codesignal", name: "CodeSignal", category: "Interview Prep", description: "Industry-standard General Coding Assessment tasks, Arcade challenges, and technical prep.", syncSupported: true, profileUrl: "https://app.codesignal.com/profile/{handle}" },
+    { id: "codingame", name: "CodinGame", category: "Learning", description: "Improve programming skills by playing online games, solving puzzles, and coding AI bots.", syncSupported: true, profileUrl: "https://www.codingame.com/profile/{handle}" },
+    { id: "interviewbit", name: "InterviewBit", category: "Interview Prep", description: "Time-tested roadmap of DSA problems, company-specific test papers, and coding mock interviews.", syncSupported: true, profileUrl: "https://www.interviewbit.com/profile/{handle}" },
+    { id: "algoexpert", name: "AlgoExpert", category: "Interview Prep", description: "Curated questions covering algorithms, data structures, and systems design interview fundamentals." },
+    { id: "freecodecamp", name: "freeCodeCamp", category: "Learning", description: "Interactive coding curriculum covering JavaScript, algorithms, data structures, and backend systems.", syncSupported: true, profileUrl: "https://www.freecodecamp.org/{handle}" },
+    { id: "lintcode", name: "LintCode", category: "Interview Prep", description: "Comprehensive problem ladder covering standard and high-frequency Silicon Valley technical questions.", syncSupported: true, profileUrl: "https://www.lintcode.com/user/{handle}" },
+    { id: "binarysearch", name: "BinarySearch", category: "Practice", description: "Live competitive problem rooms, multi-coder speed challenges, and interactive peer problem discussions." },
+    { id: "edx", name: "edX / MITx", category: "Learning", description: "Rigorous computer science, discrete math, and algorithmic engineering tracks from MIT and Harvard." },
+    { id: "coursera", name: "Coursera", category: "Learning", description: "In-depth Stanford & Princeton algorithms courses, data structures mastery, and certificates." },
+].map((platform) => ({
+    syncSupported: false,
+    profileUrl: null,
+    ...platform,
+}));
 export const publicUser = ({ passwordHash: _passwordHash, ...user }) => {
     if (!user)
         return null;
@@ -121,6 +135,56 @@ export const createUser = async (userData) => {
     store.users.push(userData);
     saveFallbackStore(store);
     return userData;
+};
+export const updateUserPassword = async (userId, passwordHash) => {
+    if (isMongoConnected) {
+        try {
+            const user = await User.findByIdAndUpdate(userId, { passwordHash }, { returnDocument: "after", runValidators: true }).lean();
+            if (user)
+                return { ...user, id: user.id ?? user._id };
+        }
+        catch (e) {
+            console.warn("Mongo updateUserPassword error:", e);
+        }
+    }
+    const store = loadFallbackStore();
+    const user = store.users.find((item) => item.id === userId);
+    if (!user)
+        return null;
+    user.passwordHash = passwordHash;
+    saveFallbackStore(store);
+    return user;
+};
+export const setPasswordResetToken = async (email, tokenHash, expiresAt) => {
+    if (isMongoConnected) {
+        const user = await User.findOneAndUpdate({ email: email.trim().toLowerCase() }, { resetTokenHash: tokenHash, resetTokenExpiresAt: expiresAt }, { returnDocument: "after" }).lean();
+        if (user)
+            return { ...user, id: user.id ?? user._id };
+    }
+    const store = loadFallbackStore();
+    const user = store.users.find((item) => item.email.toLowerCase() === email.trim().toLowerCase());
+    if (!user)
+        return null;
+    user.resetTokenHash = tokenHash;
+    user.resetTokenExpiresAt = expiresAt.toISOString();
+    saveFallbackStore(store);
+    return user;
+};
+export const resetPasswordWithToken = async (tokenHash, passwordHash) => {
+    if (isMongoConnected) {
+        const user = await User.findOneAndUpdate({ resetTokenHash: tokenHash, resetTokenExpiresAt: { $gt: new Date() } }, { passwordHash, $unset: { resetTokenHash: 1, resetTokenExpiresAt: 1 } }, { returnDocument: "after" }).lean();
+        if (user)
+            return { ...user, id: user.id ?? user._id };
+    }
+    const store = loadFallbackStore();
+    const user = store.users.find((item) => item.resetTokenHash === tokenHash && item.resetTokenExpiresAt && new Date(item.resetTokenExpiresAt) > new Date());
+    if (!user)
+        return null;
+    user.passwordHash = passwordHash;
+    delete user.resetTokenHash;
+    delete user.resetTokenExpiresAt;
+    saveFallbackStore(store);
+    return user;
 };
 export const getUserProfiles = async (userId) => {
     if (isMongoConnected) {

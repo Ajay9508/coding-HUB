@@ -16,6 +16,23 @@ services:
       start_period: 15s
     restart: unless-stopped
 
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-codinghub}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-codinghub}
+    volumes:
+      - codinghub-postgres:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-codinghub} -d ${POSTGRES_DB:-codinghub}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   api:
     build:
       context: ./backend
@@ -36,8 +53,13 @@ services:
       PROFILE_SYNC_TIMEOUT_MS: ${PROFILE_SYNC_TIMEOUT_MS:-12000}
       CODEFORCES_API_URL: ${CODEFORCES_API_URL:-https://codeforces.com/api}
       LEETCODE_GRAPHQL_URL: ${LEETCODE_GRAPHQL_URL:-https://leetcode.com/graphql/}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-codinghub}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-codinghub}
+      SOAP_WSDL_URL: ${SOAP_WSDL_URL:-http://www.dneonline.com/calculator.asmx?WSDL}
+      SOAP_TIMEOUT_MS: ${SOAP_TIMEOUT_MS:-10000}
     depends_on:
       mongo:
+        condition: service_healthy
+      postgres:
         condition: service_healthy
     expose:
       - "5000"
@@ -56,3 +78,4 @@ services:
 
 volumes:
   codinghub-mongodb:
+  codinghub-postgres:

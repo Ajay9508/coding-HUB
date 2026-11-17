@@ -213,15 +213,15 @@ const tagStyles = {
 
 const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
   return (
-    <article className="flex flex-col justify-between rounded-3xl border border-[#D6E0D2] bg-white p-6 shadow-xs hover:shadow-md transition-all dark:bg-[#1D261D] dark:border-[#2E3D2E]">
+    <article className="flex min-w-0 w-full flex-col justify-between rounded-3xl border border-[#D6E0D2] bg-white p-4 shadow-xs transition-all hover:shadow-md sm:p-6 dark:bg-[#1D261D] dark:border-[#2E3D2E]">
       {/* Top Header */}
       <div>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3.5">
+        <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-3.5">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D6E0D2] bg-[#F2F2F2] dark:bg-[#141A14] dark:border-[#2E3D2E] shadow-xs">
               <PlatformLogo type={platform.logoType} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-xl font-black text-[#1A241A] dark:text-[#F2F2F2]">{platform.name}</h3>
               <p className="text-xs text-[#6E7E6E] dark:text-[#8C9D8A] mt-0.5">{platform.subtitle}</p>
             </div>
@@ -267,7 +267,7 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
       <div className="mt-6 border-t border-[#D6E0D2] dark:border-[#2E3D2E] pt-5">
         <div className="pb-5 text-xs text-[#4A584A] dark:text-[#D2DDD0]">
           {platform.isConnected
-            ? <><p>Connected account: <span className="font-semibold text-[#1A241A] dark:text-[#F2F2F2]">@{platform.handle}</span></p><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#F2F2F2] dark:bg-[#141A14] p-3 border border-[#D6E0D2] dark:border-[#2E3D2E]"><span className="block text-[10px]">Solved</span><strong className="mt-1 block text-base text-[#1A241A] dark:text-[#F2F2F2]">{platform.solved ?? "—"}</strong></div><div className="rounded-xl bg-[#F2F2F2] dark:bg-[#141A14] p-3 border border-[#D6E0D2] dark:border-[#2E3D2E]"><span className="block text-[10px]">Rating</span><strong className="mt-1 block text-base text-[#1A241A] dark:text-[#F2F2F2]">{platform.rating ?? "—"}</strong></div></div><p className={`mt-2 ${platform.syncStatus === "error" ? "text-[#D96868]" : "text-[#6E7E6E] dark:text-[#8C9D8A]"}`}>{platform.syncError || (platform.lastSyncedAt ? `Last synced ${new Date(platform.lastSyncedAt).toLocaleString()}` : platform.syncStatus === "unavailable" ? "Automatic stats sync is unavailable" : "Stats have not synced yet")}</p></>
+            ? <><p>Connected account: <span className="font-semibold text-[#1A241A] dark:text-[#F2F2F2]">@{platform.handle}</span></p><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-xl bg-[#F2F2F2] dark:bg-[#141A14] p-3 border border-[#D6E0D2] dark:border-[#2E3D2E]"><span className="block text-[10px]">Solved</span><strong className="mt-1 block text-base text-[#1A241A] dark:text-[#F2F2F2]">{platform.solved ?? "—"}</strong></div><div className="rounded-xl bg-[#F2F2F2] dark:bg-[#141A14] p-3 border border-[#D6E0D2] dark:border-[#2E3D2E]"><span className="block text-[10px]">Rating</span><strong className="mt-1 block text-base text-[#1A241A] dark:text-[#F2F2F2]">{platform.rating ?? "—"}</strong></div></div><p className={`mt-2 ${platform.syncStatus === "error" ? "text-[#D96868]" : "text-[#6E7E6E] dark:text-[#8C9D8A]"}`}>{platform.syncError || (platform.lastSyncedAt ? `Last synced ${new Date(platform.lastSyncedAt).toLocaleString()}` : platform.syncStatus === "unavailable" || !platform.syncSupported ? "Profile connected; live statistics API is not configured" : "Stats have not synced yet")}</p></>
             : "Connect your handle to link this platform to your account."}
         </div>
 
@@ -284,7 +284,7 @@ const PlatformCard = ({ platform, onConnect, onManage, onSync, syncing }) => {
 
           {platform.isConnected ? (
             <>
-            <button type="button" onClick={() => onSync?.(platform.id)} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-xl border border-[#D6E0D2] bg-white px-3 py-2 text-xs font-bold text-[#1A241A] hover:bg-[#E5ECE2] dark:bg-[#141A14] dark:text-[#F2F2F2] dark:border-[#2E3D2E] disabled:opacity-60" aria-label={`Sync ${platform.name} stats`}><RefreshCw className={syncing ? "animate-spin" : ""} size={14} />Sync</button>
+            {platform.syncSupported && <button type="button" onClick={() => onSync?.(platform.id)} disabled={syncing} className="inline-flex items-center gap-1.5 rounded-xl border border-[#D6E0D2] bg-white px-3 py-2 text-xs font-bold text-[#1A241A] hover:bg-[#E5ECE2] dark:bg-[#141A14] dark:text-[#F2F2F2] dark:border-[#2E3D2E] disabled:opacity-60" aria-label={`Sync ${platform.name} stats`}><RefreshCw className={syncing ? "animate-spin" : ""} size={14} />Sync</button>}
             <button
               type="button"
               onClick={() => onManage && onManage(platform)}

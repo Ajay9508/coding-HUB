@@ -37,9 +37,9 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
     : "U";
 
   return (
-    <header className="app-topbar sticky top-0 z-40 flex h-20 items-center justify-between gap-4 border-b border-[#D6E0D2] bg-[#F2F2F2] dark:bg-[#141A14] dark:border-[#2E3D2E] px-6 backdrop-blur-md">
+    <header className="app-topbar sticky top-0 z-40 flex min-h-20 h-auto items-center justify-between gap-4 border-b border-[#D6E0D2] bg-[#F2F2F2] px-3 py-3 dark:bg-[#141A14] dark:border-[#2E3D2E] sm:px-6 sm:py-0 backdrop-blur-md">
       {/* Left: Mobile hamburger & Search bar */}
-      <div className="flex flex-1 items-center gap-3 max-w-2xl">
+      <div className="order-2 flex w-full flex-1 items-center gap-3 max-w-2xl sm:order-1 sm:w-auto max-sm:basis-full max-sm:max-w-none">
         <button
           type="button"
           onClick={onMenuClick}
@@ -65,7 +65,7 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
       </div>
 
       {/* Right: Notifications & Profile / Auth */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="order-1 ml-auto flex items-center gap-2 sm:order-2 sm:gap-4">
         <ThemeToggle />
 
         {/* Notification Bell */}
@@ -178,7 +178,7 @@ const TopHeader = ({ onMenuClick, searchValue = "", onSearchChange }) => {
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
             <Link
               to="/login"
               className="rounded-2xl border border-[#91AE6E] bg-white px-3.5 py-2 text-xs font-bold text-[#1A241A] hover:bg-[#E5ECE2] dark:bg-[#1D261D] dark:text-[#F2F2F2] dark:border-[#2E3D2E] transition shadow-xs"

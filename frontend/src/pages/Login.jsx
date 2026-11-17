@@ -94,6 +94,9 @@ const Login = () => {
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Signing in..." : "Login to CodingHub"}
           </Button>
+          <Link to="/forgot-password" className="block text-center text-xs font-bold text-[#167D8D] hover:underline">
+            Forgot password?
+          </Link>
         </div>
 
         <p className="mt-6 text-center text-xs text-[#526574] dark:text-[#cbd5e1]">
